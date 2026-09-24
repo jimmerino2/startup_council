@@ -1,0 +1,1 @@
+{"root":["./src/main.ts","./src/vite-env.d.ts","./src/lib/api.ts","./src/lib/supabaseclient.ts","./src/router/index.ts","./src/stores/auth.ts","./src/stores/sessions.ts","./src/app.vue","./src/views/authview.vue","./src/views/newsessionview.vue","./src/views/sessionresultsview.vue","./src/views/sessionslistview.vue"],"version":"5.9.3"}
