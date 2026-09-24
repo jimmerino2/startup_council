@@ -57,7 +57,7 @@ export async function callOpenRouter(
           // Generous headroom: some free models are "reasoning" models that spend
           // tokens on a separate `reasoning` field before ever emitting `content`,
           // so a tight cap can truncate the actual answer.
-          max_tokens: 1500,
+          max_tokens: 4000,
         }),
         // Without this, a hung upstream connection can stall a fetch() call for
         // minutes with no error — and we'd retry that multiple times on top.

@@ -35,6 +35,14 @@ export interface PersonaVerdict {
   raw: unknown;
 }
 
+/** One persona's anonymous peer review of the other personas. */
+export interface PersonaReview {
+  reviewer: PersonaKey;
+  critique: string;
+  /** The other personas, best first. */
+  ranking: PersonaKey[];
+}
+
 export interface ChairmanVerdict {
   modelId: string;
   finalVerdict: string;

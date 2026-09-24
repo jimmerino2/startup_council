@@ -64,6 +64,22 @@ export const api = {
     return handle<Record<string, unknown>>(res);
   },
 
+  async startReview(id: string) {
+    const res = await fetch(`${API_BASE_URL}/api/sessions/${id}/review`, {
+      method: "POST",
+      headers: await authHeaders(),
+    });
+    return handle<Record<string, unknown>>(res);
+  },
+
+  async retryReview(id: string, personaKey: string) {
+    const res = await fetch(`${API_BASE_URL}/api/sessions/${id}/personas/${personaKey}/review/retry`, {
+      method: "POST",
+      headers: await authHeaders(),
+    });
+    return handle<Record<string, unknown>>(res);
+  },
+
   async retryChairman(id: string) {
     const res = await fetch(`${API_BASE_URL}/api/sessions/${id}/chairman/retry`, {
       method: "POST",

@@ -12,6 +12,11 @@ export interface PersonaVerdict {
   score: number | null;
   strengths: string[];
   concerns: string[];
+  review_status: RoleStatus;
+  review_critique: string | null;
+  /** The other personas this one ranked, best first. */
+  review_ranking: string[];
+  review_error: string | null;
 }
 
 export interface ChairmanVerdict {
@@ -71,6 +76,16 @@ export const useSessionsStore = defineStore("sessions", {
 
     async retryPersona(id: string, personaKey: string) {
       await api.retryPersona(id, personaKey);
+      await this.fetchOne(id, { silent: true });
+    },
+
+    async startReview(id: string) {
+      await api.startReview(id);
+      await this.fetchOne(id, { silent: true });
+    },
+
+    async retryReview(id: string, personaKey: string) {
+      await api.retryReview(id, personaKey);
       await this.fetchOne(id, { silent: true });
     },
 

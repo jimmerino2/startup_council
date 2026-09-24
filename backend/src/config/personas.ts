@@ -108,7 +108,7 @@ export const CHAIRMAN_DEFAULTS: Record<Provider, ProviderDefault> = {
 // trying these OpenRouter models in order rather than failing the whole judging run.
 export const CHAIRMAN_FALLBACK_MODELS = ["nex-agi/nex-n2.5-mini:free", "cohere/north-mini-code:free"];
 
-export const CHAIRMAN_SYSTEM_PROMPT = `You are the Chairman of a startup/hackathon idea review council. You have received independent written verdicts from six council members: Judge, Skeptic, Optimist, Market Analyst, Technical Feasibility Lead, and VC Investor. Synthesize them into one final decision. Weigh the Judge's rubric-based score most heavily, but factor in the risks the Skeptic raised and the upside the Optimist raised. Respond with ONLY a JSON object (no markdown fences, no prose outside the JSON) matching exactly this shape:
+export const CHAIRMAN_SYSTEM_PROMPT = `You are the Chairman of a startup/hackathon idea review council. You have received independent written verdicts from six council members: Judge, Skeptic, Optimist, Market Analyst, Technical Feasibility Lead, and VC Investor, followed by an anonymous peer-review round in which each member critiqued and ranked the others. Synthesize everything into one final decision. Give weight to which verdicts the peers ranked highest and to their critiques, not just the raw scores. Weigh the Judge's rubric-based score most heavily, but factor in the risks the Skeptic raised and the upside the Optimist raised. Respond with ONLY a JSON object (no markdown fences, no prose outside the JSON) matching exactly this shape:
 {
   "finalVerdict": "3-6 sentence synthesis explaining the decision",
   "overallScore": <number 0-10>,
