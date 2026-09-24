@@ -1,1 +1,22 @@
-{"0": "Persona & Model Config", "1": "Backend Entry & Auth", "2": "Backend Dependencies", "3": "Gemini Client & Errors", "4": "Frontend Dependencies", "5": "Settings Page", "6": "Session Results View", "7": "Backend TS Config", "8": "Frontend TS Config", "9": "New Session Form", "10": "Vercel Deploy Config", "11": "App Shell & Routing", "12": "Sessions Store", "13": "Node TS Config", "14": "Root Scripts", "15": "Backend Dev Deps", "16": "API Client & Supabase", "17": "Auth View", "18": "README Architecture", "19": "Secret Encryption", "20": "index.html Entry", "21": "Vite Env Types", "22": "Frontend TS Refs", "23": "Async Judging & Deploy"}
+{
+  "0": "NewSessionView.vue",
+  "1": "settings.ts",
+  "2": "judge.ts",
+  "3": "backend/package.json",
+  "4": "modelRouter.ts",
+  "5": "package.json",
+  "6": "frontend/package.json",
+  "7": "SettingsView.vue",
+  "8": "SessionResultsView.vue",
+  "9": "compilerOptions",
+  "10": "compilerOptions",
+  "11": "backend",
+  "12": "compilerOptions",
+  "13": "dependencies",
+  "14": "Backend (Express + TypeScript)",
+  "15": "#app mount point",
+  "16": "vite-env.d.ts",
+  "17": "frontend/tsconfig.json",
+  "18": "Vercel Services deployment",
+  "19": "index.js"
+}

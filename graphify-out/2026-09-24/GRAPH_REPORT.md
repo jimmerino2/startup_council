@@ -1,138 +1,153 @@
 # Graph Report - startup_council  (2026-09-24)
 
 ## Corpus Check
-- Corpus is ~6,466 words - fits in a single context window. You may not need a graph.
+- Corpus is ~11,211 words - fits in a single context window. You may not need a graph.
 
 ## Summary
-- 269 nodes · 354 edges · 16 communities (14 shown, 2 thin omitted)
-- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 5 edges (avg confidence: 0.85)
+- 369 nodes · 527 edges · 20 communities (17 shown, 3 thin omitted)
+- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 6 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
-- Council Personas & Models
-- Express API & Auth
-- Frontend API & Stores
-- Backend Dev Tooling
-- Frontend Dependencies
-- Vue App & Supabase Client
+- Frontend App & API Client
+- Backend Server & Routes
+- Personas & Model Defaults
+- Backend Dev Dependencies
+- Gemini & Model Errors
+- Root Dependencies
+- Session Results View
+- Settings View & Keys
+- Results Polling State
 - Backend TS Config
-- Frontend TS App Config
-- Architecture & Judging Concepts
-- Vercel Services Config
-- Node TS Config
-- Root Scripts
+- Frontend TS Config
+- Vercel Config
+- Frontend Node Config
 - Backend Dependencies
-- HTML Entry Point
+- README & Deployment
+- index.html Shell
 - Vite Env Types
 - Frontend TS References
+- Async Judging & Vercel Docs
 
 ## God Nodes (most connected - your core abstractions)
 1. `compilerOptions` - 14 edges
 2. `compilerOptions` - 13 edges
-3. `compilerOptions` - 8 edges
-4. `express` - 6 edges
-5. `requireAuth()` - 6 edges
-6. `judgeWithPersona()` - 6 edges
-7. `runCouncil()` - 6 edges
-8. `runChairman()` - 6 edges
-9. `callModel()` - 6 edges
-10. `vue` - 6 edges
+3. `ModelCallError` - 11 edges
+4. `Provider` - 10 edges
+5. `judgePersona()` - 8 edges
+6. `runChairmanSynthesis()` - 8 edges
+7. `callModel()` - 8 edges
+8. `callOpenAICompatible()` - 8 edges
+9. `compilerOptions` - 8 edges
+10. `resolveModelTarget()` - 7 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `judgeInBackground()` --calls--> `runCouncil()`  [EXTRACTED]
-  backend/src/routes/judge.ts → backend/src/services/council.ts
-- `PersonaConfig` --references--> `PersonaKey`  [EXTRACTED]
+- `PersonaConfig` --references--> `Provider`  [EXTRACTED]
   backend/src/config/personas.ts → backend/src/types.ts
-- `judgeWithPersona()` --calls--> `resolveModel()`  [EXTRACTED]
-  backend/src/services/council.ts → backend/src/config/personas.ts
-- `runChairman()` --calls--> `resolveChairmanModels()`  [EXTRACTED]
-  backend/src/services/council.ts → backend/src/config/personas.ts
-- `requireAuth()` --calls--> `createAnonClient()`  [EXTRACTED]
-  backend/src/middleware/requireAuth.ts → backend/src/supabase/client.ts
+- `judgePersona()` --calls--> `callModel()`  [EXTRACTED]
+  backend/src/services/council.ts → backend/src/services/modelRouter.ts
+- `runChairmanSynthesis()` --calls--> `callModel()`  [EXTRACTED]
+  backend/src/services/council.ts → backend/src/services/modelRouter.ts
+- `loadUserModelSettings()` --calls--> `decryptSecret()`  [EXTRACTED]
+  backend/src/services/loadUserModelSettings.ts → backend/src/services/crypto.ts
+- `ProviderConfig` --references--> `Provider`  [EXTRACTED]
+  backend/src/services/openaiCompatible.ts → backend/src/types.ts
 
 ## Import Cycles
 - None detected.
 
 ## Hyperedges (group relationships)
-- **Council judging flow** — readme_file_upload_parsing, readme_stage1_personas, readme_stage2_chairman [EXTRACTED 0.95]
+- **Council judging flow** — readme_stage1_personas, readme_stage2_chairman, readme_supabase [EXTRACTED 1.00]
 
-## Communities (16 total, 2 thin omitted)
+## Communities (20 total, 3 thin omitted)
 
-### Community 0 - "Council Personas & Models"
-Cohesion: 0.11
-Nodes (28): CHAIRMAN_DEFAULT_MODEL, CHAIRMAN_FALLBACK_MODELS, CHAIRMAN_MODEL_ENV_VAR, CHAIRMAN_SYSTEM_PROMPT, PersonaConfig, PERSONAS, resolveChairmanModels(), resolveModel() (+20 more)
+### Community 0 - "Frontend App & API Client"
+Cohesion: 0.06
+Nodes (33): auth, router, api, supabase, app, router, useAuthStore, ChairmanVerdict (+25 more)
 
-### Community 1 - "Express API & Auth"
-Cohesion: 0.11
-Nodes (23): app, missing, requiredEnvVars, AuthedRequest, requireAuth(), judgeRouter, SessionRow, sessionsRouter (+15 more)
-
-### Community 2 - "Frontend API & Stores"
+### Community 1 - "Backend Server & Routes"
 Cohesion: 0.08
-Nodes (21): api, ChairmanVerdict, PersonaVerdict, SessionSummary, useSessionsStore, error, judgingCriteria, pitchText (+13 more)
+Nodes (30): app, missing, requiredEnvVars, AuthedRequest, requireAuth(), judgeRouter, sessionsRouter, PROVIDERS (+22 more)
 
-### Community 3 - "Backend Dev Tooling"
+### Community 2 - "Personas & Model Defaults"
+Cohesion: 0.12
+Nodes (31): apiKeyFor(), CHAIRMAN_DEFAULTS, CHAIRMAN_FALLBACK_MODELS, CHAIRMAN_SYSTEM_PROMPT, defaultModelFor(), PersonaConfig, PERSONAS, ProviderDefault (+23 more)
+
+### Community 3 - "Backend Dev Dependencies"
+Cohesion: 0.06
+Nodes (33): devDependencies, esbuild, tsx, @types/cors, @types/express, @types/multer, @types/node, @types/pdf-parse (+25 more)
+
+### Community 4 - "Gemini & Model Errors"
+Cohesion: 0.12
+Nodes (27): callGemini(), GeminiResponse, RETRY_DELAYS_MS, sleep(), ModelCallError, backend_src_services_modelerror_provider, callModel(), ModelTarget (+19 more)
+
+### Community 5 - "Root Dependencies"
 Cohesion: 0.07
-Nodes (26): devDependencies, tsx, @types/cors, @types/express, @types/multer, @types/node, @types/pdf-parse, typescript (+18 more)
+Nodes (26): dependencies, cors, dotenv, express, mammoth, multer, pdf-parse, @supabase/supabase-js (+18 more)
 
-### Community 4 - "Frontend Dependencies"
+### Community 6 - "Session Results View"
 Cohesion: 0.08
 Nodes (24): dependencies, pinia, @supabase/supabase-js, vue, vue-router, devDependencies, typescript, vite (+16 more)
 
-### Community 5 - "Vue App & Supabase Client"
-Cohesion: 0.12
-Nodes (17): auth, router, supabase, app, router, useAuthStore, frontend_src_style, auth (+9 more)
+### Community 7 - "Settings View & Keys"
+Cohesion: 0.10
+Nodes (18): error, geminiApiKey, gonkaApiKey, groqApiKey, hasGeminiKey, hasGonkaKey, hasGroqKey, hasMistralKey (+10 more)
 
-### Community 6 - "Backend TS Config"
+### Community 8 - "Results Polling State"
+Cohesion: 0.11
+Nodes (15): allPersonasComplete, chairmanError, chairmanStatus, personaLabels, personaVerdicts, props, recommendationColor, retryChairman() (+7 more)
+
+### Community 9 - "Backend TS Config"
 Cohesion: 0.12
 Nodes (15): compilerOptions, declaration, esModuleInterop, forceConsistentCasingInFileNames, lib, module, moduleResolution, outDir (+7 more)
 
-### Community 7 - "Frontend TS App Config"
+### Community 10 - "Frontend TS Config"
 Cohesion: 0.13
 Nodes (14): compilerOptions, allowImportingTsExtensions, isolatedModules, jsx, lib, module, moduleResolution, noEmit (+6 more)
 
-### Community 8 - "Architecture & Judging Concepts"
-Cohesion: 0.24
-Nodes (13): Asynchronous Judging, Backend (Express API), sessions, persona_verdicts, chairman_verdicts tables, Shared .env Configuration, Pitch Upload and Parsing, Frontend (Vue 3, Vite, Pinia), OpenRouter Free Models, Stage 1 Persona Scoring (+5 more)
+### Community 11 - "Vercel Config"
+Cohesion: 0.14
+Nodes (13): includeFiles, maxDuration, entrypoint, functions, root, framework, rewrites, root (+5 more)
 
-### Community 9 - "Vercel Services Config"
-Cohesion: 0.15
-Nodes (12): maxDuration, entrypoint, functions, root, framework, rewrites, root, api/index.ts (+4 more)
-
-### Community 10 - "Node TS Config"
+### Community 12 - "Frontend Node Config"
 Cohesion: 0.20
 Nodes (9): compilerOptions, allowSyntheticDefaultImports, module, moduleResolution, noEmit, skipLibCheck, strict, target (+1 more)
 
-### Community 11 - "Root Scripts"
-Cohesion: 0.20
-Nodes (9): devDependencies, concurrently, supabase, private, scripts, dev, install:all, concurrently (+1 more)
-
-### Community 12 - "Backend Dependencies"
+### Community 13 - "Backend Dependencies"
 Cohesion: 0.22
 Nodes (9): dependencies, cors, dotenv, express, mammoth, multer, pdf-parse, @supabase/supabase-js (+1 more)
 
-### Community 13 - "HTML Entry Point"
+### Community 14 - "README & Deployment"
+Cohesion: 0.33
+Nodes (7): Backend (Express + TypeScript), Shared .env configuration, Frontend (Vue 3 + Vite + Pinia), OpenRouter free models, Startup Council, Supabase (Postgres, RLS, magic-link auth), 2-stage council design
+
+### Community 15 - "index.html Shell"
 Cohesion: 1.00
 Nodes (3): #app mount point, Startup Council index.html, src/main.ts entry module
 
+### Community 18 - "Async Judging & Vercel Docs"
+Cohesion: 0.67
+Nodes (3): Asynchronous judging (202 + waitUntil + polling), Supabase setup after deploying, Vercel Services deployment
+
 ## Knowledge Gaps
-- **147 isolated node(s):** `name`, `version`, `private`, `type`, `dev` (+142 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 159 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **2 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **205 isolated node(s):** `name`, `version`, `private`, `dev`, `build` (+200 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 229 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **3 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `pinia` connect `Vue App & Supabase Client` to `Frontend API & Stores`, `Frontend Dependencies`?**
-  _High betweenness centrality (0.091) - this node is a cross-community bridge._
-- **Why does `express` connect `Express API & Auth` to `Backend Dev Tooling`?**
-  _High betweenness centrality (0.089) - this node is a cross-community bridge._
-- **Why does `@vercel/functions` connect `Express API & Auth` to `Backend Dev Tooling`?**
-  _High betweenness centrality (0.047) - this node is a cross-community bridge._
+- **Why does `pinia` connect `Frontend App & API Client` to `Session Results View`?**
+  _High betweenness centrality (0.053) - this node is a cross-community bridge._
+- **Why does `vue` connect `Frontend App & API Client` to `Results Polling State`, `Session Results View`, `Settings View & Keys`?**
+  _High betweenness centrality (0.033) - this node is a cross-community bridge._
 - **What connects `name`, `version`, `private` to the rest of the system?**
-  _147 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `Council Personas & Models` be split into smaller, more focused modules?**
-  _Cohesion score 0.11174242424242424 - nodes in this community are weakly interconnected._
-- **Should `Express API & Auth` be split into smaller, more focused modules?**
-  _Cohesion score 0.10967741935483871 - nodes in this community are weakly interconnected._
-- **Should `Frontend API & Stores` be split into smaller, more focused modules?**
-  _Cohesion score 0.07526881720430108 - nodes in this community are weakly interconnected._
+  _205 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `Frontend App & API Client` be split into smaller, more focused modules?**
+  _Cohesion score 0.061224489795918366 - nodes in this community are weakly interconnected._
+- **Should `Backend Server & Routes` be split into smaller, more focused modules?**
+  _Cohesion score 0.08205128205128205 - nodes in this community are weakly interconnected._
+- **Should `Personas & Model Defaults` be split into smaller, more focused modules?**
+  _Cohesion score 0.12012012012012012 - nodes in this community are weakly interconnected._
+- **Should `Backend Dev Dependencies` be split into smaller, more focused modules?**
+  _Cohesion score 0.058823529411764705 - nodes in this community are weakly interconnected._
