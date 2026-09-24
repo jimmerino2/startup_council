@@ -97,6 +97,8 @@ a {
 
 input[type="text"],
 input[type="email"],
+input[type="password"],
+select,
 textarea {
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -167,6 +169,15 @@ textarea {
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.role-row {
+  display: grid;
+  grid-template-columns: 9rem 8rem 1fr;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.5rem 0;
   border-bottom: 1px solid var(--border);
 }
 

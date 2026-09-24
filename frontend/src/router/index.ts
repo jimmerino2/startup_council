@@ -4,6 +4,7 @@ import AuthView from "../views/AuthView.vue";
 import NewSessionView from "../views/NewSessionView.vue";
 import SessionResultsView from "../views/SessionResultsView.vue";
 import SessionsListView from "../views/SessionsListView.vue";
+import SettingsView from "../views/SettingsView.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -13,6 +14,7 @@ const router = createRouter({
     { path: "/sessions", name: "sessions", component: SessionsListView, meta: { requiresAuth: true } },
     { path: "/sessions/new", name: "new-session", component: NewSessionView, meta: { requiresAuth: true } },
     { path: "/sessions/:id", name: "session-results", component: SessionResultsView, meta: { requiresAuth: true }, props: true },
+    { path: "/settings", name: "settings", component: SettingsView, meta: { requiresAuth: true } },
   ],
 });
 

@@ -6,6 +6,25 @@ export type PersonaKey =
   | "tech_lead"
   | "vc_investor";
 
+export type RoleKey = PersonaKey | "chairman";
+
+export type Provider = "openrouter" | "gemini" | "mistral" | "groq" | "gonka";
+
+export interface ModelChoice {
+  provider: Provider;
+  modelId: string;
+}
+
+/** A user's saved model overrides and (decrypted, in-memory only) provider API keys. */
+export interface UserModelSettings {
+  models: Partial<Record<RoleKey, ModelChoice>>;
+  openrouterApiKey?: string;
+  geminiApiKey?: string;
+  mistralApiKey?: string;
+  groqApiKey?: string;
+  gonkaApiKey?: string;
+}
+
 export interface PersonaVerdict {
   personaKey: PersonaKey;
   modelId: string;

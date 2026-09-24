@@ -56,6 +56,22 @@ export const api = {
     return handle<Record<string, unknown>>(res);
   },
 
+  async retryPersona(id: string, personaKey: string) {
+    const res = await fetch(`${API_BASE_URL}/api/sessions/${id}/personas/${personaKey}/retry`, {
+      method: "POST",
+      headers: await authHeaders(),
+    });
+    return handle<Record<string, unknown>>(res);
+  },
+
+  async retryChairman(id: string) {
+    const res = await fetch(`${API_BASE_URL}/api/sessions/${id}/chairman/retry`, {
+      method: "POST",
+      headers: await authHeaders(),
+    });
+    return handle<Record<string, unknown>>(res);
+  },
+
   async extractFile(file: File) {
     const formData = new FormData();
     formData.append("file", file);
@@ -65,5 +81,33 @@ export const api = {
       body: formData,
     });
     return handle<{ text: string; filename: string; type: string }>(res);
+  },
+
+  async getSettings() {
+    const res = await fetch(`${API_BASE_URL}/api/settings`, { headers: await authHeaders() });
+    return handle<{
+      models: Partial<Record<string, { provider: "openrouter" | "gemini" | "mistral" | "groq" | "gonka"; modelId: string }>>;
+      hasOpenRouterKey: boolean;
+      hasGeminiKey: boolean;
+      hasMistralKey: boolean;
+      hasGroqKey: boolean;
+      hasGonkaKey: boolean;
+    }>(res);
+  },
+
+  async saveSettings(input: {
+    models?: Record<string, { provider: "openrouter" | "gemini" | "mistral" | "groq" | "gonka"; modelId: string }>;
+    openrouterApiKey?: string;
+    geminiApiKey?: string;
+    mistralApiKey?: string;
+    groqApiKey?: string;
+    gonkaApiKey?: string;
+  }) {
+    const res = await fetch(`${API_BASE_URL}/api/settings`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+      body: JSON.stringify(input),
+    });
+    return handle<{ ok: true }>(res);
   },
 };

@@ -4,8 +4,9 @@ import cors from "cors";
 import { sessionsRouter } from "./routes/sessions.js";
 import { judgeRouter } from "./routes/judge.js";
 import { uploadRouter } from "./routes/upload.js";
+import { settingsRouter } from "./routes/settings.js";
 
-const requiredEnvVars = ["OPENROUTER_API_KEY", "SUPABASE_URL", "SUPABASE_ANON_KEY"];
+const requiredEnvVars = ["SUPABASE_URL", "SUPABASE_ANON_KEY", "API_KEY_ENCRYPTION_SECRET"];
 const missing = requiredEnvVars.filter((key) => !process.env[key]);
 if (missing.length > 0) {
   console.warn(`Warning: missing env vars: ${missing.join(", ")}. See .env.example.`);
@@ -21,6 +22,7 @@ app.get("/api/health", (_req, res) => res.json({ ok: true }));
 app.use("/api/sessions", sessionsRouter);
 app.use("/api/sessions", judgeRouter);
 app.use("/api/upload", uploadRouter);
+app.use("/api/settings", settingsRouter);
 
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error(err);

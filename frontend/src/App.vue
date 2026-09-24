@@ -18,6 +18,7 @@ async function handleSignOut() {
       <nav v-if="auth.isSignedIn" class="nav">
         <RouterLink to="/sessions">Sessions</RouterLink>
         <RouterLink to="/sessions/new">New Judging</RouterLink>
+        <RouterLink to="/settings">Settings</RouterLink>
         <span class="user-email">{{ auth.user?.email }}</span>
         <button class="link-btn" @click="handleSignOut">Sign out</button>
       </nav>

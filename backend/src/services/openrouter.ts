@@ -1,3 +1,5 @@
+import { ModelCallError } from "./modelError.js";
+
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
 interface OpenRouterMessage {
@@ -12,13 +14,6 @@ interface OpenRouterResponse {
   error?: { message?: string; code?: number };
 }
 
-export class OpenRouterError extends Error {
-  constructor(message: string, readonly modelId: string, readonly cause?: unknown) {
-    super(message);
-    this.name = "OpenRouterError";
-  }
-}
-
 // Worst case per model: 3 attempts x 40s + 7s of backoff = 127s. Kept small so a
 // full council run (personas in parallel, then chairman) fits Vercel's 300s limit.
 const MAX_RETRIES = 2;
@@ -29,12 +24,12 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function callModel(modelId: string, systemPrompt: string, userPrompt: string): Promise<{ text: string; raw: unknown }> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) {
-    throw new OpenRouterError("OPENROUTER_API_KEY is not set", modelId);
-  }
-
+export async function callOpenRouter(
+  modelId: string,
+  apiKey: string,
+  systemPrompt: string,
+  userPrompt: string
+): Promise<{ text: string; raw: unknown }> {
   const messages: OpenRouterMessage[] = [
     { role: "system", content: systemPrompt },
     { role: "user", content: userPrompt },
@@ -71,7 +66,7 @@ export async function callModel(modelId: string, systemPrompt: string, userPromp
     } catch (err) {
       const isTimeout = err instanceof Error && err.name === "TimeoutError";
       lastFailureMessage = isTimeout ? `Timed out after ${REQUEST_TIMEOUT_MS}ms` : `Network error: ${(err as Error).message}`;
-      if (isLastAttempt) throw new OpenRouterError(`${isTimeout ? "Timed out" : "Network error"} calling ${modelId}`, modelId, err);
+      if (isLastAttempt) throw new ModelCallError(`${isTimeout ? "Timed out" : "Network error"} calling ${modelId}`, "openrouter", modelId, err);
       await sleep(RETRY_DELAYS_MS[attempt]);
       continue;
     }
@@ -80,12 +75,18 @@ export async function callModel(modelId: string, systemPrompt: string, userPromp
     // retrying after a short backoff usually succeeds within a few seconds.
     if (!res.ok) {
       const body = await res.text().catch(() => "");
-      lastFailureMessage = `HTTP ${res.status}: ${body}`;
+      let detail = body;
+      try {
+        detail = (JSON.parse(body) as OpenRouterResponse).error?.message?.trim() || body;
+      } catch {
+        // Not JSON; keep the raw body.
+      }
+      lastFailureMessage = `HTTP ${res.status}: ${detail}`;
       if ((res.status === 429 || res.status >= 500) && !isLastAttempt) {
         await sleep(RETRY_DELAYS_MS[attempt]);
         continue;
       }
-      throw new OpenRouterError(`OpenRouter request failed (${res.status}) for ${modelId}: ${body}`, modelId);
+      throw new ModelCallError(`OpenRouter request failed (${res.status}) for ${modelId}: ${detail}`, "openrouter", modelId);
     }
 
     const json = (await res.json()) as OpenRouterResponse;
@@ -96,7 +97,7 @@ export async function callModel(modelId: string, systemPrompt: string, userPromp
         await sleep(RETRY_DELAYS_MS[attempt]);
         continue;
       }
-      throw new OpenRouterError(`${modelId} failed: ${lastFailureMessage}`, modelId, json);
+      throw new ModelCallError(`${modelId} failed: ${lastFailureMessage}`, "openrouter", modelId, json);
     }
 
     const choice = json.choices?.[0];
@@ -110,14 +111,14 @@ export async function callModel(modelId: string, systemPrompt: string, userPromp
         await sleep(RETRY_DELAYS_MS[attempt]);
         continue;
       }
-      throw new OpenRouterError(`Empty response from ${modelId}${reason}`, modelId, json);
+      throw new ModelCallError(`Empty response from ${modelId}${reason}`, "openrouter", modelId, json);
     }
 
     return { text, raw: json };
   }
 
   // Unreachable in practice: the loop always returns or throws on its last attempt.
-  throw new OpenRouterError(`OpenRouter request failed for ${modelId}: ${lastFailureMessage}`, modelId);
+  throw new ModelCallError(`OpenRouter request failed for ${modelId}: ${lastFailureMessage}`, "openrouter", modelId);
 }
 
 /** Finds every top-level brace-balanced `{...}` in a string, ignoring braces inside quoted strings. */

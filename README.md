@@ -49,8 +49,8 @@ npm run dev             # backend http://localhost:3001 + frontend http://localh
 ```
 
 Get a free OpenRouter API key at https://openrouter.ai/keys. The default persona→model mapping
-in `.env.example` uses free (`:free`) models as of setup time — verify current availability at
-https://openrouter.ai/models?max_price=0 and override any `OPENROUTER_MODEL_*` var if a slug has
+in `backend/src/config/personas.ts` uses free (`:free`) models as of setup time — verify current availability at
+https://openrouter.ai/models?max_price=0 and change the slug there (or per role on the Settings page) if one has
 been retired.
 
 ## Deploying to Vercel
@@ -60,8 +60,8 @@ One Vercel project, one deployment, using [Vercel Services](https://vercel.com/d
 Import the repo and choose the **Services** preset.
 
 Vercel does not read `.env` files. Add these in the project's Environment Variables settings:
-`OPENROUTER_API_KEY`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`,
-and optionally `OPENROUTER_MODEL_*`. Leave `VITE_API_BASE_URL` empty (same origin) and `CORS_ORIGIN` unset.
+`OPENROUTER_API_KEY`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`.
+Leave `VITE_API_BASE_URL` empty (same origin) and `CORS_ORIGIN` unset.
 
 Then add the deployed URL to Supabase → Authentication → URL Configuration (Site URL and Redirect URLs).
 Sanity check after deploying: `https://<your-domain>/api/health` should return `{"ok":true}`.

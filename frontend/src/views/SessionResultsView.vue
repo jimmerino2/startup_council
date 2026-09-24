@@ -1,16 +1,22 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useSessionsStore } from "../stores/sessions";
+import type { PersonaVerdict } from "../stores/sessions";
 
 const props = defineProps<{ id: string }>();
 const store = useSessionsStore();
 
 const POLL_INTERVAL_MS = 4000;
 let timer: ReturnType<typeof setInterval> | undefined;
+const retryingPersona = ref<string | null>(null);
+const retryingChairman = ref(false);
+const startingJudging = ref(false);
 
 function isInFlight() {
-  const s = store.current?.session?.status;
-  return s === "pending" || s === "judging";
+  const personaVerdicts = store.current?.personaVerdicts ?? [];
+  const anyPersonaInFlight = personaVerdicts.some((v) => v.status === "pending" || v.status === "running");
+  const chairmanInFlight = store.current?.session?.chairman_status === "running";
+  return anyPersonaInFlight || chairmanInFlight;
 }
 
 onMounted(async () => {
@@ -22,11 +28,36 @@ onMounted(async () => {
 
 onUnmounted(() => clearInterval(timer));
 
-async function retry() {
+async function retryPersona(personaKey: string) {
+  retryingPersona.value = personaKey;
+  try {
+    await store.retryPersona(props.id, personaKey);
+  } catch (err) {
+    store.error = (err as Error).message;
+  } finally {
+    retryingPersona.value = null;
+  }
+}
+
+async function startJudging() {
+  startingJudging.value = true;
   try {
     await store.retryJudging(props.id);
   } catch (err) {
     store.error = (err as Error).message;
+  } finally {
+    startingJudging.value = false;
+  }
+}
+
+async function retryChairman() {
+  retryingChairman.value = true;
+  try {
+    await store.retryChairman(props.id);
+  } catch (err) {
+    store.error = (err as Error).message;
+  } finally {
+    retryingChairman.value = false;
   }
 }
 
@@ -47,6 +78,10 @@ const recommendationColor: Record<string, string> = {
 
 const sessionTitle = computed(() => (store.current?.session?.title as string) ?? "");
 const status = computed(() => (store.current?.session?.status as string) ?? "");
+const chairmanStatus = computed(() => (store.current?.session?.chairman_status as string) ?? "pending");
+const chairmanError = computed(() => (store.current?.session?.chairman_error as string | null) ?? null);
+const personaVerdicts = computed<PersonaVerdict[]>(() => store.current?.personaVerdicts ?? []);
+const allPersonasComplete = computed(() => personaVerdicts.value.length > 0 && personaVerdicts.value.every((v) => v.status === "complete"));
 </script>
 
 <template>
@@ -58,7 +93,14 @@ const status = computed(() => (store.current?.session?.status as string) ?? "");
       <h2>{{ sessionTitle }}</h2>
       <span class="status-badge">{{ status }}</span>
 
-      <div v-if="store.current.chairmanVerdict" class="card" style="margin-top: 1.25rem; border-width: 2px">
+      <div v-if="personaVerdicts.length === 0" class="card" style="margin-top: 1.25rem">
+        <p class="muted">This session hasn't been judged yet.</p>
+        <button class="btn" :disabled="startingJudging" @click="startJudging">
+          {{ startingJudging ? "Starting…" : "Start judging" }}
+        </button>
+      </div>
+
+      <div v-else-if="store.current.chairmanVerdict && chairmanStatus === 'complete'" class="card" style="margin-top: 1.25rem; border-width: 2px">
         <h3>
           Chairman verdict
           <span
@@ -71,35 +113,63 @@ const status = computed(() => (store.current?.session?.status as string) ?? "");
         <p>{{ store.current.chairmanVerdict.final_verdict_text }}</p>
         <p class="muted">Model: {{ store.current.chairmanVerdict.model_id }}</p>
       </div>
-      <p v-else-if="status === 'judging' || status === 'pending'" class="muted">
-        Council is deliberating… this usually takes 30–120 seconds. This page updates automatically.
-      </p>
-      <div v-else-if="status === 'error'">
-        <p class="error-text">Judging failed (free models are sometimes overloaded).</p>
-        <button class="btn" @click="retry">Retry judging</button>
+
+      <div v-else class="card" style="margin-top: 1.25rem; border-width: 2px">
+        <h3>Chairman verdict</h3>
+        <p v-if="chairmanStatus === 'running'" class="muted">Chairman is synthesizing the final decision…</p>
+        <p v-else-if="!allPersonasComplete" class="muted">
+          Waiting on all 6 council members before the chairman can make a final decision.
+        </p>
+        <template v-else>
+          <p v-if="chairmanStatus === 'failed'" class="error-text">Chairman failed: {{ chairmanError }}</p>
+          <p v-else class="muted">All council members are in — ready for the chairman's final decision.</p>
+          <button class="btn" :disabled="retryingChairman" @click="retryChairman">
+            {{ retryingChairman ? "Running…" : chairmanStatus === "failed" ? "Retry chairman" : "Run chairman" }}
+          </button>
+        </template>
       </div>
 
+      <template v-if="personaVerdicts.length > 0">
       <h3 style="margin-top: 1.5rem">Council verdicts</h3>
-      <div v-for="v in store.current.personaVerdicts" :key="v.persona_key" class="card">
+      <div v-for="v in personaVerdicts" :key="v.persona_key" class="card">
         <h3>
           {{ personaLabels[v.persona_key] ?? v.persona_key }}
-          <span class="score-pill">{{ v.score }}/10</span>
+          <span v-if="v.status === 'complete'" class="score-pill">{{ v.score }}/10</span>
+          <span v-else class="status-badge">{{ v.status }}</span>
         </h3>
-        <p>{{ v.verdict_text }}</p>
-        <div v-if="v.strengths?.length">
-          <strong>Strengths:</strong>
-          <ul>
-            <li v-for="s in v.strengths" :key="s">{{ s }}</li>
-          </ul>
-        </div>
-        <div v-if="v.concerns?.length">
-          <strong>Concerns:</strong>
-          <ul>
-            <li v-for="c in v.concerns" :key="c">{{ c }}</li>
-          </ul>
-        </div>
-        <p class="muted">Model: {{ v.model_id }}</p>
+
+        <template v-if="v.status === 'complete'">
+          <p>{{ v.verdict_text }}</p>
+          <div v-if="v.strengths?.length">
+            <strong>Strengths:</strong>
+            <ul>
+              <li v-for="s in v.strengths" :key="s">{{ s }}</li>
+            </ul>
+          </div>
+          <div v-if="v.concerns?.length">
+            <strong>Concerns:</strong>
+            <ul>
+              <li v-for="c in v.concerns" :key="c">{{ c }}</li>
+            </ul>
+          </div>
+          <p class="muted">Model: {{ v.model_id }}</p>
+        </template>
+        <template v-else-if="v.status === 'failed'">
+          <p class="error-text">{{ v.error_message }}</p>
+          <p v-if="v.model_id" class="muted">Model: {{ v.model_id }}</p>
+        </template>
+        <p v-else class="muted">Finalizing Verdict…</p>
+
+        <button
+          v-if="v.status === 'failed'"
+          class="btn btn-secondary"
+          :disabled="retryingPersona === v.persona_key"
+          @click="retryPersona(v.persona_key)"
+        >
+          {{ retryingPersona === v.persona_key ? "Retrying…" : "Retry" }}
+        </button>
       </div>
+      </template>
     </template>
   </div>
 </template>

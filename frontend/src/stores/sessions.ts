@@ -1,11 +1,15 @@
 import { defineStore } from "pinia";
 import { api } from "../lib/api";
 
+export type RoleStatus = "pending" | "running" | "complete" | "failed";
+
 export interface PersonaVerdict {
   persona_key: string;
   model_id: string;
-  verdict_text: string;
-  score: number;
+  status: RoleStatus;
+  error_message: string | null;
+  verdict_text: string | null;
+  score: number | null;
   strengths: string[];
   concerns: string[];
 }
@@ -62,6 +66,16 @@ export const useSessionsStore = defineStore("sessions", {
 
     async retryJudging(id: string) {
       await api.judgeSession(id);
+      await this.fetchOne(id, { silent: true });
+    },
+
+    async retryPersona(id: string, personaKey: string) {
+      await api.retryPersona(id, personaKey);
+      await this.fetchOne(id, { silent: true });
+    },
+
+    async retryChairman(id: string) {
+      await api.retryChairman(id);
       await this.fetchOne(id, { silent: true });
     },
 

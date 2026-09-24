@@ -1,10 +1,14 @@
-import type { PersonaKey } from "../types.js";
+import type { PersonaKey, Provider, UserModelSettings } from "../types.js";
+import type { ModelTarget } from "../services/modelRouter.js";
+
+interface ProviderDefault {
+  defaultModel: string;
+}
 
 interface PersonaConfig {
   key: PersonaKey;
   label: string;
-  envVar: string;
-  defaultModel: string;
+  defaults: Record<Provider, ProviderDefault>;
   systemPrompt: string;
 }
 
@@ -20,52 +24,88 @@ export const PERSONAS: PersonaConfig[] = [
   {
     key: "judge",
     label: "Judge",
-    envVar: "OPENROUTER_MODEL_JUDGE",
-    defaultModel: "nex-agi/nex-n2.5-pro:free",
+    defaults: {
+      openrouter: { defaultModel: "nex-agi/nex-n2.5-pro:free" },
+      gemini: { defaultModel: "gemini-3.5-flash-lite" },
+      mistral: { defaultModel: "mistral-small-latest" },
+      groq: { defaultModel: "openai/gpt-oss-20b" },
+      gonka: { defaultModel: "zai-org/GLM-5.3-Flash" },
+    },
     systemPrompt: `You are the neutral Judge on a startup/hackathon idea review council. Score the submission strictly against the judging criteria the user provides, criterion by criterion, then give an overall score. Be fair and rubric-driven, not swayed by enthusiasm or pessimism. ${RESPONSE_FORMAT_INSTRUCTIONS}`,
   },
   {
     key: "skeptic",
     label: "Skeptic",
-    envVar: "OPENROUTER_MODEL_SKEPTIC",
-    defaultModel: "nvidia/nemotron-3-ultra-550b-a55b:free",
+    defaults: {
+      openrouter: { defaultModel: "nvidia/nemotron-3-ultra-550b-a55b:free" },
+      gemini: { defaultModel: "gemini-3.5-flash-lite" },
+      mistral: { defaultModel: "mistral-small-latest" },
+      groq: { defaultModel: "openai/gpt-oss-20b" },
+      gonka: { defaultModel: "zai-org/GLM-5.3-Flash" },
+    },
     systemPrompt: `You are the Skeptic on a startup/hackathon idea review council. Actively look for reasons this idea fails: weak assumptions, market risk, execution risk, competitive threats. Be direct and critical, but fair and specific, not needlessly cruel. ${RESPONSE_FORMAT_INSTRUCTIONS}`,
   },
   {
     key: "optimist",
     label: "Optimist",
-    envVar: "OPENROUTER_MODEL_OPTIMIST",
-    defaultModel: "dots-studio/dots-3-note-preview:free",
+    defaults: {
+      openrouter: { defaultModel: "dots-studio/dots-3-note-preview:free" },
+      gemini: { defaultModel: "gemini-3.5-flash-lite" },
+      mistral: { defaultModel: "mistral-small-latest" },
+      groq: { defaultModel: "openai/gpt-oss-20b" },
+      gonka: { defaultModel: "zai-org/GLM-5.3-Flash" },
+    },
     systemPrompt: `You are the Optimist on a startup/hackathon idea review council. Make the strongest honest case for why this idea could succeed big: the upside scenario, unlocks, and reasons momentum could compound. Stay grounded in the submission, don't invent facts not implied by it. ${RESPONSE_FORMAT_INSTRUCTIONS}`,
   },
   {
     key: "market_analyst",
     label: "Market Analyst",
-    envVar: "OPENROUTER_MODEL_MARKET_ANALYST",
-    defaultModel: "nex-agi/nex-n2.5-mini:free",
+    defaults: {
+      openrouter: { defaultModel: "nex-agi/nex-n2.5-mini:free" },
+      gemini: { defaultModel: "gemini-3.5-flash-lite" },
+      mistral: { defaultModel: "mistral-small-latest" },
+      groq: { defaultModel: "openai/gpt-oss-20b" },
+      gonka: { defaultModel: "zai-org/GLM-5.3-Flash" },
+    },
     systemPrompt: `You are the Market Analyst on a startup/hackathon idea review council. Assess market size, competitive landscape, differentiation, and go-to-market plausibility. ${RESPONSE_FORMAT_INSTRUCTIONS}`,
   },
   {
     key: "tech_lead",
     label: "Technical Feasibility Lead",
-    envVar: "OPENROUTER_MODEL_TECH_LEAD",
-    defaultModel: "cohere/north-mini-code:free",
+    defaults: {
+      openrouter: { defaultModel: "cohere/north-mini-code:free" },
+      gemini: { defaultModel: "gemini-3.5-flash-lite" },
+      mistral: { defaultModel: "mistral-small-latest" },
+      groq: { defaultModel: "openai/gpt-oss-20b" },
+      gonka: { defaultModel: "zai-org/GLM-5.3-Flash" },
+    },
     systemPrompt: `You are the Technical Feasibility Lead on a startup/hackathon idea review council. Assess whether this is buildable: technical complexity, dependencies, scalability risk, and whether the scope fits the team/timeframe implied by the submission. ${RESPONSE_FORMAT_INSTRUCTIONS}`,
   },
   {
     key: "vc_investor",
     label: "VC Investor",
-    envVar: "OPENROUTER_MODEL_VC_INVESTOR",
-    defaultModel: "inclusionai/ling-3.0-flash-fin:free",
+    defaults: {
+      openrouter: { defaultModel: "inclusionai/ling-3.0-flash-fin:free" },
+      gemini: { defaultModel: "gemini-3.5-flash-lite" },
+      mistral: { defaultModel: "mistral-small-latest" },
+      groq: { defaultModel: "openai/gpt-oss-20b" },
+      gonka: { defaultModel: "zai-org/GLM-5.3-Flash" },
+    },
     systemPrompt: `You are the VC Investor on a startup/hackathon idea review council. Assess fundability: business model, unit economics plausibility, team/founder signal if present, and whether you personally would invest and why. ${RESPONSE_FORMAT_INSTRUCTIONS}`,
   },
 ];
 
-export const CHAIRMAN_MODEL_ENV_VAR = "OPENROUTER_MODEL_CHAIRMAN";
-export const CHAIRMAN_DEFAULT_MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free";
+export const CHAIRMAN_DEFAULTS: Record<Provider, ProviderDefault> = {
+  openrouter: { defaultModel: "nvidia/nemotron-3-ultra-550b-a55b:free" },
+  gemini: { defaultModel: "gemini-3.5-flash-lite" },
+  mistral: { defaultModel: "mistral-small-latest" },
+  groq: { defaultModel: "openai/gpt-oss-20b" },
+  gonka: { defaultModel: "zai-org/GLM-5.3-Flash" },
+};
+
 // Unlike personas (where a quorum tolerates one flaking), the chairman is a single
 // required call with no redundancy — so if it fails after retries, we fall back to
-// trying these models in order rather than failing the whole judging run.
+// trying these OpenRouter models in order rather than failing the whole judging run.
 export const CHAIRMAN_FALLBACK_MODELS = ["nex-agi/nex-n2.5-mini:free", "cohere/north-mini-code:free"];
 
 export const CHAIRMAN_SYSTEM_PROMPT = `You are the Chairman of a startup/hackathon idea review council. You have received independent written verdicts from six council members: Judge, Skeptic, Optimist, Market Analyst, Technical Feasibility Lead, and VC Investor. Synthesize them into one final decision. Weigh the Judge's rubric-based score most heavily, but factor in the risks the Skeptic raised and the upside the Optimist raised. Respond with ONLY a JSON object (no markdown fences, no prose outside the JSON) matching exactly this shape:
@@ -75,12 +115,48 @@ export const CHAIRMAN_SYSTEM_PROMPT = `You are the Chairman of a startup/hackath
   "recommendation": "fund" | "iterate" | "pass"
 }`;
 
-export function resolveModel(config: PersonaConfig): string {
-  return process.env[config.envVar]?.trim() || config.defaultModel;
+function defaultModelFor(provider: Provider, defaults: Record<Provider, ProviderDefault>): string {
+  return defaults[provider].defaultModel;
 }
 
-/** Primary chairman model first, then fallbacks, deduplicated. */
-export function resolveChairmanModels(): string[] {
-  const primary = process.env[CHAIRMAN_MODEL_ENV_VAR]?.trim() || CHAIRMAN_DEFAULT_MODEL;
-  return [primary, ...CHAIRMAN_FALLBACK_MODELS.filter((m) => m !== primary)];
+function apiKeyFor(provider: Provider, settings: UserModelSettings | undefined): string {
+  if (provider === "gemini") return settings?.geminiApiKey || "";
+  if (provider === "mistral") return settings?.mistralApiKey || "";
+  if (provider === "groq") return settings?.groqApiKey || "";
+  if (provider === "gonka") return settings?.gonkaApiKey || "";
+  return settings?.openrouterApiKey || "";
+}
+
+/**
+ * Resolves which provider/model/key to call for a persona. Precedence:
+ * 1. The user's saved provider choice for this role, with their chosen model id
+ *    or — if left as "system default" — that provider's default model.
+ * 2. No saved choice at all: OpenRouter's default for this role.
+ * A user override with no matching saved API key is surfaced as a normal
+ * persona failure by the caller.
+ */
+export function resolveModelTarget(config: PersonaConfig, settings: UserModelSettings | undefined): ModelTarget {
+  const override = settings?.models[config.key];
+  const provider = override?.provider ?? "openrouter";
+  const modelId = override?.modelId.trim() || defaultModelFor(provider, config.defaults);
+  return { provider, modelId, apiKey: apiKeyFor(provider, settings) };
+}
+
+/** Primary chairman target first, then OpenRouter fallbacks, deduplicated by model id. */
+export function resolveChairmanModelTargets(settings: UserModelSettings | undefined): ModelTarget[] {
+  const override = settings?.models.chairman;
+  const provider = override?.provider ?? "openrouter";
+  const primary: ModelTarget = {
+    provider,
+    modelId: override?.modelId.trim() || defaultModelFor(provider, CHAIRMAN_DEFAULTS),
+    apiKey: apiKeyFor(provider, settings),
+  };
+
+  const fallbacks: ModelTarget[] = CHAIRMAN_FALLBACK_MODELS.filter((m) => m !== primary.modelId).map((modelId) => ({
+    provider: "openrouter",
+    modelId,
+    apiKey: settings?.openrouterApiKey || "",
+  }));
+
+  return [primary, ...fallbacks];
 }
