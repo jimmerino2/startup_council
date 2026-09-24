@@ -1,6 +1,7 @@
 import { supabase } from "./supabaseClient";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+// Empty in production (same-origin /api under Vercel Services); set for local dev.
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 
 async function authHeaders(): Promise<HeadersInit> {
   const { data } = await supabase.auth.getSession();

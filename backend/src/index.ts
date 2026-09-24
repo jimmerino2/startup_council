@@ -1,9 +1,13 @@
-import "dotenv/config";
+import { config } from "dotenv";
+import { fileURLToPath } from "node:url";
 import express from "express";
 import cors from "cors";
 import { sessionsRouter } from "./routes/sessions.js";
 import { judgeRouter } from "./routes/judge.js";
 import { uploadRouter } from "./routes/upload.js";
+
+// Single shared .env at the repo root (on Vercel, env vars come from project settings instead).
+config({ path: fileURLToPath(new URL("../../.env", import.meta.url)) });
 
 const requiredEnvVars = ["OPENROUTER_API_KEY", "SUPABASE_URL", "SUPABASE_ANON_KEY"];
 const missing = requiredEnvVars.filter((key) => !process.env[key]);
