@@ -1,17 +1,17 @@
 # Graph Report - startup_council  (2026-09-24)
 
 ## Corpus Check
-- 50 files · ~11,211 words
+- 51 files · ~12,867 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 19 file(s) not represented in the graph (top: (none) 13, .tsbuildinfo 2, .lock 1)
 
 ## Summary
-- 369 nodes · 526 edges · 20 communities (17 shown, 3 thin omitted)
-- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 6 edges (avg confidence: 0.85)
+- 387 nodes · 559 edges · 20 communities (17 shown, 3 thin omitted)
+- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 8 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `70c2a1b2`
+- Built from commit: `50afe890`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -40,25 +40,25 @@
 1. `compilerOptions` - 14 edges
 2. `compilerOptions` - 13 edges
 3. `ModelCallError` - 11 edges
-4. `Provider` - 9 edges
-5. `callOpenAICompatible()` - 8 edges
-6. `judgePersona()` - 8 edges
-7. `runChairmanSynthesis()` - 8 edges
-8. `callModel()` - 8 edges
-9. `compilerOptions` - 8 edges
-10. `requireAuth()` - 7 edges
+4. `runChairmanSynthesis()` - 9 edges
+5. `Provider` - 9 edges
+6. `callModel()` - 9 edges
+7. `resolveModelTarget()` - 8 edges
+8. `judgePersona()` - 8 edges
+9. `reviewPersona()` - 8 edges
+10. `callOpenAICompatible()` - 8 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `PersonaConfig` --references--> `Provider`  [EXTRACTED]
   backend/src/config/personas.ts → backend/src/types.ts
-- `loadUserModelSettings()` --calls--> `decryptSecret()`  [EXTRACTED]
-  backend/src/services/loadUserModelSettings.ts → backend/src/services/crypto.ts
 - `judgePersona()` --calls--> `callModel()`  [EXTRACTED]
+  backend/src/services/council.ts → backend/src/services/modelRouter.ts
+- `reviewPersona()` --calls--> `callModel()`  [EXTRACTED]
   backend/src/services/council.ts → backend/src/services/modelRouter.ts
 - `runChairmanSynthesis()` --calls--> `callModel()`  [EXTRACTED]
   backend/src/services/council.ts → backend/src/services/modelRouter.ts
-- `callModel()` --calls--> `callOpenAICompatible()`  [EXTRACTED]
-  backend/src/services/modelRouter.ts → backend/src/services/openaiCompatible.ts
+- `PersonaConfig` --references--> `PersonaKey`  [EXTRACTED]
+  backend/src/config/personas.ts → backend/src/types.ts
 
 ## Import Cycles
 - None detected.
@@ -74,11 +74,11 @@ Nodes (33): auth, router, api, supabase, app, router, useAuthStore, ChairmanVerd
 
 ### Community 1 - "settings.ts"
 Cohesion: 0.08
-Nodes (30): app, missing, requiredEnvVars, AuthedRequest, requireAuth(), judgeRouter, sessionsRouter, PROVIDERS (+22 more)
+Nodes (31): app, missing, requiredEnvVars, AuthedRequest, requireAuth(), judgeRouter, sessionsRouter, PROVIDERS (+23 more)
 
 ### Community 2 - "judge.ts"
-Cohesion: 0.12
-Nodes (31): apiKeyFor(), CHAIRMAN_DEFAULTS, CHAIRMAN_FALLBACK_MODELS, CHAIRMAN_SYSTEM_PROMPT, defaultModelFor(), PersonaConfig, PERSONAS, ProviderDefault (+23 more)
+Cohesion: 0.11
+Nodes (38): apiKeyFor(), CHAIRMAN_DEFAULTS, CHAIRMAN_FALLBACK_MODELS, CHAIRMAN_SYSTEM_PROMPT, defaultModelFor(), PersonaConfig, PERSONAS, ProviderDefault (+30 more)
 
 ### Community 3 - "backend/package.json"
 Cohesion: 0.06
@@ -101,8 +101,8 @@ Cohesion: 0.10
 Nodes (18): error, geminiApiKey, gonkaApiKey, groqApiKey, hasGeminiKey, hasGonkaKey, hasGroqKey, hasMistralKey (+10 more)
 
 ### Community 8 - "SessionResultsView.vue"
-Cohesion: 0.11
-Nodes (15): allPersonasComplete, chairmanError, chairmanStatus, personaLabels, personaVerdicts, props, recommendationColor, retryChairman() (+7 more)
+Cohesion: 0.07
+Nodes (25): allPersonasComplete, allReviewsComplete, anyReviewFailed, anyReviewRunning, averageRanking, chairmanError, chairmanStatus, personaLabels (+17 more)
 
 ### Community 9 - "compilerOptions"
 Cohesion: 0.12
@@ -137,24 +137,24 @@ Cohesion: 0.67
 Nodes (3): Asynchronous judging (202 + waitUntil + polling), Supabase setup after deploying, Vercel Services deployment
 
 ## Knowledge Gaps
-- **206 isolated node(s):** `ProviderConfig`, `ChatResponse`, `RETRY_DELAYS_MS`, `nextSlotAt`, `ChairmanVerdict` (+201 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 230 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **216 isolated node(s):** `ProviderDefault`, `CHAIRMAN_DEFAULTS`, `CHAIRMAN_FALLBACK_MODELS`, `SessionRow`, `RESET_REVIEW` (+211 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 240 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **3 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `pinia` connect `NewSessionView.vue` to `frontend/package.json`?**
-  _High betweenness centrality (0.053) - this node is a cross-community bridge._
+  _High betweenness centrality (0.052) - this node is a cross-community bridge._
 - **Why does `vue` connect `NewSessionView.vue` to `SessionResultsView.vue`, `frontend/package.json`, `SettingsView.vue`?**
-  _High betweenness centrality (0.033) - this node is a cross-community bridge._
-- **What connects `ProviderConfig`, `ChatResponse`, `RETRY_DELAYS_MS` to the rest of the system?**
-  _206 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _High betweenness centrality (0.036) - this node is a cross-community bridge._
+- **What connects `ProviderDefault`, `CHAIRMAN_DEFAULTS`, `CHAIRMAN_FALLBACK_MODELS` to the rest of the system?**
+  _216 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `NewSessionView.vue` be split into smaller, more focused modules?**
   _Cohesion score 0.061224489795918366 - nodes in this community are weakly interconnected._
 - **Should `settings.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.08205128205128205 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.07897793263646923 - nodes in this community are weakly interconnected._
 - **Should `judge.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.12012012012012012 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.10520487264673312 - nodes in this community are weakly interconnected._
 - **Should `backend/package.json` be split into smaller, more focused modules?**
   _Cohesion score 0.058823529411764705 - nodes in this community are weakly interconnected._

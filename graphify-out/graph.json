@@ -30,7 +30,7 @@
       "file_type": "code",
       "norm_label": "chairmanverdict",
       "source_file": "frontend/src/stores/sessions.ts",
-      "source_location": "L17"
+      "source_location": "L22"
     },
     {
       "id": "frontend_src_stores_sessions_personaverdict",
@@ -69,7 +69,7 @@
       "file_type": "code",
       "norm_label": "sessionsummary",
       "source_file": "frontend/src/stores/sessions.ts",
-      "source_location": "L24"
+      "source_location": "L29"
     },
     {
       "id": "backend_src_middleware_requireauth_authedrequest",
@@ -212,7 +212,7 @@
       "file_type": "code",
       "norm_label": "rawchairmanjson",
       "source_file": "backend/src/services/council.ts",
-      "source_location": "L14"
+      "source_location": "L19"
     },
     {
       "id": "backend_src_services_council_rawpersonajson",
@@ -228,6 +228,19 @@
       "source_location": "L7"
     },
     {
+      "id": "backend_src_services_council_rawreviewjson",
+      "label": "RawReviewJson",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "judge.ts",
+      "file_type": "code",
+      "norm_label": "rawreviewjson",
+      "source_file": "backend/src/services/council.ts",
+      "source_location": "L14"
+    },
+    {
       "id": "backend_src_types_chairmanverdict",
       "label": "ChairmanVerdict",
       "_callable": true,
@@ -238,7 +251,7 @@
       "file_type": "code",
       "norm_label": "chairmanverdict",
       "source_file": "backend/src/types.ts",
-      "source_location": "L38"
+      "source_location": "L46"
     },
     {
       "id": "backend_src_types_personakey",
@@ -252,6 +265,19 @@
       "norm_label": "personakey",
       "source_file": "backend/src/types.ts",
       "source_location": "L1"
+    },
+    {
+      "id": "backend_src_types_personareview",
+      "label": "PersonaReview",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "judge.ts",
+      "file_type": "code",
+      "norm_label": "personareview",
+      "source_file": "backend/src/types.ts",
+      "source_location": "L39"
     },
     {
       "id": "backend_src_types_personaverdict",
@@ -277,7 +303,7 @@
       "file_type": "code",
       "norm_label": "sessioninput",
       "source_file": "backend/src/types.ts",
-      "source_location": "L46"
+      "source_location": "L54"
     },
     {
       "id": "backend_src_types_usermodelsettings",
@@ -566,6 +592,18 @@
       "source_location": "L17"
     },
     {
+      "id": "backend_src_services_loadusermodelsettings_loadusermodelsettings",
+      "label": "loadUserModelSettings()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "settings.ts",
+      "file_type": "code",
+      "norm_label": "loadusermodelsettings()",
+      "source_file": "backend/src/services/loadUserModelSettings.ts",
+      "source_location": "L6"
+    },
+    {
       "id": "backend_src_supabase_client_createanonclient",
       "label": "createAnonClient()",
       "_callable": true,
@@ -647,7 +685,7 @@
       "file_type": "code",
       "norm_label": "fetchsession()",
       "source_file": "backend/src/routes/judge.ts",
-      "source_location": "L124"
+      "source_location": "L164"
     },
     {
       "id": "backend_src_routes_judge_judgeallinbackground",
@@ -659,7 +697,7 @@
       "file_type": "code",
       "norm_label": "judgeallinbackground()",
       "source_file": "backend/src/routes/judge.ts",
-      "source_location": "L117"
+      "source_location": "L160"
     },
     {
       "id": "backend_src_routes_judge_runchairmanandpersist",
@@ -671,7 +709,7 @@
       "file_type": "code",
       "norm_label": "runchairmanandpersist()",
       "source_file": "backend/src/routes/judge.ts",
-      "source_location": "L75"
+      "source_location": "L93"
     },
     {
       "id": "backend_src_routes_judge_runpersonaandpersist",
@@ -683,7 +721,31 @@
       "file_type": "code",
       "norm_label": "runpersonaandpersist()",
       "source_file": "backend/src/routes/judge.ts",
-      "source_location": "L36"
+      "source_location": "L54"
+    },
+    {
+      "id": "backend_src_routes_judge_runreviewandpersist",
+      "label": "runReviewAndPersist()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "judge.ts",
+      "file_type": "code",
+      "norm_label": "runreviewandpersist()",
+      "source_file": "backend/src/routes/judge.ts",
+      "source_location": "L132"
+    },
+    {
+      "id": "backend_src_routes_judge_topersonaverdict",
+      "label": "toPersonaVerdict()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "judge.ts",
+      "file_type": "code",
+      "norm_label": "topersonaverdict()",
+      "source_file": "backend/src/routes/judge.ts",
+      "source_location": "L41"
     },
     {
       "id": "backend_src_routes_judge_tosessioninput",
@@ -698,6 +760,18 @@
       "source_location": "L26"
     },
     {
+      "id": "backend_src_services_council_averageranks",
+      "label": "averageRanks()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "judge.ts",
+      "file_type": "code",
+      "norm_label": "averageranks()",
+      "source_file": "backend/src/services/council.ts",
+      "source_location": "L139"
+    },
+    {
       "id": "backend_src_services_council_buildsubmissionprompt",
       "label": "buildSubmissionPrompt()",
       "_callable": true,
@@ -707,7 +781,7 @@
       "file_type": "code",
       "norm_label": "buildsubmissionprompt()",
       "source_file": "backend/src/services/council.ts",
-      "source_location": "L20"
+      "source_location": "L25"
     },
     {
       "id": "backend_src_services_council_clampscore",
@@ -719,7 +793,7 @@
       "file_type": "code",
       "norm_label": "clampscore()",
       "source_file": "backend/src/services/council.ts",
-      "source_location": "L31"
+      "source_location": "L36"
     },
     {
       "id": "backend_src_services_council_judgepersona",
@@ -731,7 +805,31 @@
       "file_type": "code",
       "norm_label": "judgepersona()",
       "source_file": "backend/src/services/council.ts",
-      "source_location": "L42"
+      "source_location": "L47"
+    },
+    {
+      "id": "backend_src_services_council_reviewpersona",
+      "label": "reviewPersona()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "judge.ts",
+      "file_type": "code",
+      "norm_label": "reviewpersona()",
+      "source_file": "backend/src/services/council.ts",
+      "source_location": "L93"
+    },
+    {
+      "id": "backend_src_services_council_reviewsystemprompt",
+      "label": "reviewSystemPrompt()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "judge.ts",
+      "file_type": "code",
+      "norm_label": "reviewsystemprompt()",
+      "source_file": "backend/src/services/council.ts",
+      "source_location": "L80"
     },
     {
       "id": "backend_src_services_council_runchairmansynthesis",
@@ -743,19 +841,7 @@
       "file_type": "code",
       "norm_label": "runchairmansynthesis()",
       "source_file": "backend/src/services/council.ts",
-      "source_location": "L79"
-    },
-    {
-      "id": "backend_src_services_loadusermodelsettings_loadusermodelsettings",
-      "label": "loadUserModelSettings()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "judge.ts",
-      "file_type": "code",
-      "norm_label": "loadusermodelsettings()",
-      "source_file": "backend/src/services/loadUserModelSettings.ts",
-      "source_location": "L6"
+      "source_location": "L158"
     },
     {
       "id": "backend_src_services_openrouter_extractjsonobject",
@@ -947,7 +1033,7 @@
       "file_type": "code",
       "norm_label": "isinflight()",
       "source_file": "frontend/src/views/SessionResultsView.vue",
-      "source_location": "L15"
+      "source_location": "L17"
     },
     {
       "id": "frontend_src_views_sessionresultsview_retrychairman",
@@ -959,7 +1045,7 @@
       "file_type": "code",
       "norm_label": "retrychairman()",
       "source_file": "frontend/src/views/SessionResultsView.vue",
-      "source_location": "L53"
+      "source_location": "L78"
     },
     {
       "id": "frontend_src_views_sessionresultsview_retrypersona",
@@ -971,7 +1057,19 @@
       "file_type": "code",
       "norm_label": "retrypersona()",
       "source_file": "frontend/src/views/SessionResultsView.vue",
-      "source_location": "L31"
+      "source_location": "L34"
+    },
+    {
+      "id": "frontend_src_views_sessionresultsview_retryreview",
+      "label": "retryReview()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 8,
+      "community_name": "SessionResultsView.vue",
+      "file_type": "code",
+      "norm_label": "retryreview()",
+      "source_file": "frontend/src/views/SessionResultsView.vue",
+      "source_location": "L67"
     },
     {
       "id": "frontend_src_views_sessionresultsview_startjudging",
@@ -983,7 +1081,19 @@
       "file_type": "code",
       "norm_label": "startjudging()",
       "source_file": "frontend/src/views/SessionResultsView.vue",
-      "source_location": "L42"
+      "source_location": "L45"
+    },
+    {
+      "id": "frontend_src_views_sessionresultsview_startreview",
+      "label": "startReview()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 8,
+      "community_name": "SessionResultsView.vue",
+      "file_type": "code",
+      "norm_label": "startreview()",
+      "source_file": "frontend/src/views/SessionResultsView.vue",
+      "source_location": "L56"
     },
     {
       "id": "frontend_src_app",
@@ -1148,7 +1258,7 @@
       "file_type": "code",
       "norm_label": "usesessionsstore",
       "source_file": "frontend/src/stores/sessions.ts",
-      "source_location": "L31"
+      "source_location": "L36"
     },
     {
       "id": "frontend_src_views_authview",
@@ -1588,6 +1698,17 @@
       "file_type": "code",
       "norm_label": "documentparser.ts",
       "source_file": "backend/src/services/documentParser.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_src_services_loadusermodelsettings",
+      "label": "loadUserModelSettings.ts",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "settings.ts",
+      "file_type": "code",
+      "norm_label": "loadusermodelsettings.ts",
+      "source_file": "backend/src/services/loadUserModelSettings.ts",
       "source_location": "L1"
     },
     {
@@ -2251,6 +2372,17 @@
       "source_location": "L1"
     },
     {
+      "id": "backend_src_routes_judge_reset_review",
+      "label": "RESET_REVIEW",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "judge.ts",
+      "file_type": "code",
+      "norm_label": "reset_review",
+      "source_file": "backend/src/routes/judge.ts",
+      "source_location": "L36"
+    },
+    {
       "id": "backend_src_services_council",
       "label": "council.ts",
       "_origin": "ast",
@@ -2259,17 +2391,6 @@
       "file_type": "code",
       "norm_label": "council.ts",
       "source_file": "backend/src/services/council.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_src_services_loadusermodelsettings",
-      "label": "loadUserModelSettings.ts",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "judge.ts",
-      "file_type": "code",
-      "norm_label": "loadusermodelsettings.ts",
-      "source_file": "backend/src/services/loadUserModelSettings.ts",
       "source_location": "L1"
     },
     {
@@ -3590,7 +3711,51 @@
       "file_type": "code",
       "norm_label": "allpersonascomplete",
       "source_file": "frontend/src/views/SessionResultsView.vue",
-      "source_location": "L84"
+      "source_location": "L109"
+    },
+    {
+      "id": "frontend_src_views_sessionresultsview_allreviewscomplete",
+      "label": "allReviewsComplete",
+      "_origin": "ast",
+      "community": 8,
+      "community_name": "SessionResultsView.vue",
+      "file_type": "code",
+      "norm_label": "allreviewscomplete",
+      "source_file": "frontend/src/views/SessionResultsView.vue",
+      "source_location": "L110"
+    },
+    {
+      "id": "frontend_src_views_sessionresultsview_anyreviewfailed",
+      "label": "anyReviewFailed",
+      "_origin": "ast",
+      "community": 8,
+      "community_name": "SessionResultsView.vue",
+      "file_type": "code",
+      "norm_label": "anyreviewfailed",
+      "source_file": "frontend/src/views/SessionResultsView.vue",
+      "source_location": "L112"
+    },
+    {
+      "id": "frontend_src_views_sessionresultsview_anyreviewrunning",
+      "label": "anyReviewRunning",
+      "_origin": "ast",
+      "community": 8,
+      "community_name": "SessionResultsView.vue",
+      "file_type": "code",
+      "norm_label": "anyreviewrunning",
+      "source_file": "frontend/src/views/SessionResultsView.vue",
+      "source_location": "L111"
+    },
+    {
+      "id": "frontend_src_views_sessionresultsview_averageranking",
+      "label": "averageRanking",
+      "_origin": "ast",
+      "community": 8,
+      "community_name": "SessionResultsView.vue",
+      "file_type": "code",
+      "norm_label": "averageranking",
+      "source_file": "frontend/src/views/SessionResultsView.vue",
+      "source_location": "L117"
     },
     {
       "id": "frontend_src_views_sessionresultsview_chairmanerror",
@@ -3601,7 +3766,7 @@
       "file_type": "code",
       "norm_label": "chairmanerror",
       "source_file": "frontend/src/views/SessionResultsView.vue",
-      "source_location": "L82"
+      "source_location": "L107"
     },
     {
       "id": "frontend_src_views_sessionresultsview_chairmanstatus",
@@ -3612,7 +3777,7 @@
       "file_type": "code",
       "norm_label": "chairmanstatus",
       "source_file": "frontend/src/views/SessionResultsView.vue",
-      "source_location": "L81"
+      "source_location": "L106"
     },
     {
       "id": "frontend_src_views_sessionresultsview_personalabels",
@@ -3623,7 +3788,7 @@
       "file_type": "code",
       "norm_label": "personalabels",
       "source_file": "frontend/src/views/SessionResultsView.vue",
-      "source_location": "L64"
+      "source_location": "L89"
     },
     {
       "id": "frontend_src_views_sessionresultsview_personaverdicts",
@@ -3634,7 +3799,7 @@
       "file_type": "code",
       "norm_label": "personaverdicts",
       "source_file": "frontend/src/views/SessionResultsView.vue",
-      "source_location": "L83"
+      "source_location": "L108"
     },
     {
       "id": "frontend_src_views_sessionresultsview_props",
@@ -3656,7 +3821,7 @@
       "file_type": "code",
       "norm_label": "recommendationcolor",
       "source_file": "frontend/src/views/SessionResultsView.vue",
-      "source_location": "L73"
+      "source_location": "L98"
     },
     {
       "id": "frontend_src_views_sessionresultsview_retryingchairman",
@@ -3681,6 +3846,39 @@
       "source_location": "L11"
     },
     {
+      "id": "frontend_src_views_sessionresultsview_retryingreview",
+      "label": "retryingReview",
+      "_origin": "ast",
+      "community": 8,
+      "community_name": "SessionResultsView.vue",
+      "file_type": "code",
+      "norm_label": "retryingreview",
+      "source_file": "frontend/src/views/SessionResultsView.vue",
+      "source_location": "L15"
+    },
+    {
+      "id": "frontend_src_views_sessionresultsview_reviewsdone",
+      "label": "reviewsDone",
+      "_origin": "ast",
+      "community": 8,
+      "community_name": "SessionResultsView.vue",
+      "file_type": "code",
+      "norm_label": "reviewsdone",
+      "source_file": "frontend/src/views/SessionResultsView.vue",
+      "source_location": "L114"
+    },
+    {
+      "id": "frontend_src_views_sessionresultsview_reviewstarted",
+      "label": "reviewStarted",
+      "_origin": "ast",
+      "community": 8,
+      "community_name": "SessionResultsView.vue",
+      "file_type": "code",
+      "norm_label": "reviewstarted",
+      "source_file": "frontend/src/views/SessionResultsView.vue",
+      "source_location": "L113"
+    },
+    {
       "id": "frontend_src_views_sessionresultsview_sessiontitle",
       "label": "sessionTitle",
       "_origin": "ast",
@@ -3689,7 +3887,7 @@
       "file_type": "code",
       "norm_label": "sessiontitle",
       "source_file": "frontend/src/views/SessionResultsView.vue",
-      "source_location": "L79"
+      "source_location": "L104"
     },
     {
       "id": "frontend_src_views_sessionresultsview_startingjudging",
@@ -3703,6 +3901,17 @@
       "source_location": "L13"
     },
     {
+      "id": "frontend_src_views_sessionresultsview_startingreview",
+      "label": "startingReview",
+      "_origin": "ast",
+      "community": 8,
+      "community_name": "SessionResultsView.vue",
+      "file_type": "code",
+      "norm_label": "startingreview",
+      "source_file": "frontend/src/views/SessionResultsView.vue",
+      "source_location": "L14"
+    },
+    {
       "id": "frontend_src_views_sessionresultsview_status",
       "label": "status",
       "_origin": "ast",
@@ -3711,7 +3920,7 @@
       "file_type": "code",
       "norm_label": "status",
       "source_file": "frontend/src/views/SessionResultsView.vue",
-      "source_location": "L80"
+      "source_location": "L105"
     },
     {
       "id": "frontend_src_views_sessionresultsview_store",
@@ -4340,19 +4549,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/src/routes/judge.ts",
-      "source_location": "L118",
-      "weight": 1.0
-    },
-    {
-      "source": "backend_src_routes_judge_judgeallinbackground",
-      "target": "backend_src_routes_judge_runchairmanandpersist",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "backend/src/routes/judge.ts",
-      "source_location": "L120",
+      "source_location": "L161",
       "weight": 1.0
     },
     {
@@ -4364,7 +4561,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/src/routes/judge.ts",
-      "source_location": "L95",
+      "source_location": "L110",
       "weight": 1.0
     },
     {
@@ -4376,7 +4573,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/src/routes/judge.ts",
-      "source_location": "L95",
+      "source_location": "L110",
       "weight": 1.0
     },
     {
@@ -4388,7 +4585,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/src/routes/judge.ts",
-      "source_location": "L46",
+      "source_location": "L64",
       "weight": 1.0
     },
     {
@@ -4400,7 +4597,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/src/routes/judge.ts",
-      "source_location": "L50",
+      "source_location": "L68",
       "weight": 1.0
     },
     {
@@ -4412,7 +4609,31 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/src/routes/judge.ts",
-      "source_location": "L50",
+      "source_location": "L68",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_routes_judge_runreviewandpersist",
+      "target": "backend_src_routes_judge_tosessioninput",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "backend/src/routes/judge.ts",
+      "source_location": "L145",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_routes_judge_runreviewandpersist",
+      "target": "backend_src_services_council_reviewpersona",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "backend/src/routes/judge.ts",
+      "source_location": "L145",
       "weight": 1.0
     },
     {
@@ -4424,7 +4645,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/src/services/council.ts",
-      "source_location": "L47",
+      "source_location": "L52",
       "weight": 1.0
     },
     {
@@ -4436,7 +4657,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/src/services/council.ts",
-      "source_location": "L53",
+      "source_location": "L58",
       "weight": 1.0
     },
     {
@@ -4448,24 +4669,12 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/src/services/council.ts",
-      "source_location": "L53",
+      "source_location": "L58",
       "weight": 1.0
     },
     {
       "source": "backend_src_services_council_judgepersona",
       "target": "backend_src_services_openrouter_extractjsonobject",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "backend/src/services/council.ts",
-      "source_location": "L55",
-      "weight": 1.0
-    },
-    {
-      "source": "backend_src_services_council_judgepersona",
-      "target": "backend_src_services_council_clampscore",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -4476,20 +4685,20 @@
       "weight": 1.0
     },
     {
-      "source": "backend_src_services_council_runchairmansynthesis",
-      "target": "backend_src_services_modelrouter_callmodel",
+      "source": "backend_src_services_council_judgepersona",
+      "target": "backend_src_services_council_clampscore",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/src/services/council.ts",
-      "source_location": "L107",
+      "source_location": "L65",
       "weight": 1.0
     },
     {
-      "source": "backend_src_services_council_runchairmansynthesis",
-      "target": "backend_src_services_openrouter_extractjsonobject",
+      "source": "backend_src_services_council_reviewpersona",
+      "target": "backend_src_services_council_buildsubmissionprompt",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -4500,15 +4709,51 @@
       "weight": 1.0
     },
     {
-      "source": "backend_src_services_council_runchairmansynthesis",
-      "target": "backend_src_services_council_clampscore",
+      "source": "backend_src_services_council_reviewpersona",
+      "target": "backend_src_services_council_reviewsystemprompt",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/src/services/council.ts",
-      "source_location": "L112",
+      "source_location": "L120",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_services_council_reviewpersona",
+      "target": "backend_src_services_modelrouter_callmodel",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "backend/src/services/council.ts",
+      "source_location": "L120",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_services_council_reviewpersona",
+      "target": "backend_src_services_openrouter_extractjsonobject",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "backend/src/services/council.ts",
+      "source_location": "L122",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_services_council_reviewpersona",
+      "target": "backend_src_config_personas_resolvemodeltarget",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "backend/src/services/council.ts",
+      "source_location": "L99",
       "weight": 1.0
     },
     {
@@ -4520,7 +4765,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/src/services/council.ts",
-      "source_location": "L85",
+      "source_location": "L165",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_services_council_runchairmansynthesis",
+      "target": "backend_src_services_council_averageranks",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "backend/src/services/council.ts",
+      "source_location": "L179",
       "weight": 1.0
     },
     {
@@ -4532,7 +4789,43 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/src/services/council.ts",
-      "source_location": "L97",
+      "source_location": "L187",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_services_council_runchairmansynthesis",
+      "target": "backend_src_services_modelrouter_callmodel",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "backend/src/services/council.ts",
+      "source_location": "L197",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_services_council_runchairmansynthesis",
+      "target": "backend_src_services_openrouter_extractjsonobject",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "backend/src/services/council.ts",
+      "source_location": "L198",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_services_council_runchairmansynthesis",
+      "target": "backend_src_services_council_clampscore",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "backend/src/services/council.ts",
+      "source_location": "L202",
       "weight": 1.0
     },
     {
@@ -4760,7 +5053,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/views/SessionResultsView.vue",
-      "source_location": "L56",
+      "source_location": "L81",
       "weight": 1.0
     },
     {
@@ -4772,7 +5065,43 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/views/SessionResultsView.vue",
-      "source_location": "L34",
+      "source_location": "L37",
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_src_views_sessionresultsview_retryreview",
+      "target": "frontend_src_views_sessionresultsview_retryreview",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "frontend/src/views/SessionResultsView.vue",
+      "source_location": "L70",
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_src_views_sessionresultsview_startreview",
+      "target": "frontend_src_views_sessionresultsview_startreview",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "frontend/src/views/SessionResultsView.vue",
+      "source_location": "L59",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_routes_judge",
+      "target": "backend_src_routes_judge_runreviewandpersist",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "backend/src/routes/judge.ts",
+      "source_location": "L132",
       "weight": 1.0
     },
     {
@@ -4784,7 +5113,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/src/routes/judge.ts",
-      "source_location": "L117",
+      "source_location": "L160",
       "weight": 1.0
     },
     {
@@ -4796,7 +5125,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/src/routes/judge.ts",
-      "source_location": "L124",
+      "source_location": "L164",
       "weight": 1.0
     },
     {
@@ -4808,7 +5137,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/src/routes/judge.ts",
-      "source_location": "L36",
+      "source_location": "L54",
       "weight": 1.0
     },
     {
@@ -4820,7 +5149,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/src/routes/judge.ts",
-      "source_location": "L75",
+      "source_location": "L93",
       "weight": 1.0
     },
     {
@@ -4844,7 +5173,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/views/SessionResultsView.vue",
-      "source_location": "L15",
+      "source_location": "L17",
       "weight": 1.0
     },
     {
@@ -5282,6 +5611,18 @@
     },
     {
       "source": "backend_src_routes_judge",
+      "target": "backend_src_services_council_reviewpersona",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "backend/src/routes/judge.ts",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_routes_judge",
       "target": "backend_src_services_council_runchairmansynthesis",
       "relation": "imports",
       "_origin": "ast",
@@ -5307,6 +5648,18 @@
     {
       "source": "backend_src_routes_judge",
       "target": "backend_src_types_personakey",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "backend/src/routes/judge.ts",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_routes_judge",
+      "target": "backend_src_types_personareview",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -5547,6 +5900,30 @@
     {
       "source": "backend_src_services_council",
       "target": "backend_src_types_chairmanverdict",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "backend/src/services/council.ts",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_services_council",
+      "target": "backend_src_types_personakey",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "backend/src/services/council.ts",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_services_council",
+      "target": "backend_src_types_personareview",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -7722,6 +8099,28 @@
       "weight": 1.0
     },
     {
+      "source": "backend_src_routes_judge",
+      "target": "backend_src_routes_judge_reset_review",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/src/routes/judge.ts",
+      "source_location": "L36",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_routes_judge",
+      "target": "backend_src_routes_judge_topersonaverdict",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/src/routes/judge.ts",
+      "source_location": "L41",
+      "weight": 1.0
+    },
+    {
       "source": "backend_src_routes_sessions",
       "target": "backend_src_routes_sessions_sessionsrouter",
       "relation": "contains",
@@ -7800,7 +8199,18 @@
     },
     {
       "source": "backend_src_services_council",
-      "target": "backend_src_services_council_rawchairmanjson",
+      "target": "backend_src_services_council_averageranks",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/src/services/council.ts",
+      "source_location": "L139",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_services_council",
+      "target": "backend_src_services_council_rawreviewjson",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -7811,13 +8221,35 @@
     },
     {
       "source": "backend_src_services_council",
+      "target": "backend_src_services_council_runchairmansynthesis",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/src/services/council.ts",
+      "source_location": "L158",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_services_council",
+      "target": "backend_src_services_council_rawchairmanjson",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/src/services/council.ts",
+      "source_location": "L19",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_services_council",
       "target": "backend_src_services_council_buildsubmissionprompt",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/src/services/council.ts",
-      "source_location": "L20",
+      "source_location": "L25",
       "weight": 1.0
     },
     {
@@ -7828,7 +8260,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/src/services/council.ts",
-      "source_location": "L31",
+      "source_location": "L36",
       "weight": 1.0
     },
     {
@@ -7839,7 +8271,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/src/services/council.ts",
-      "source_location": "L42",
+      "source_location": "L47",
       "weight": 1.0
     },
     {
@@ -7855,13 +8287,24 @@
     },
     {
       "source": "backend_src_services_council",
-      "target": "backend_src_services_council_runchairmansynthesis",
+      "target": "backend_src_services_council_reviewsystemprompt",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/src/services/council.ts",
-      "source_location": "L79",
+      "source_location": "L80",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_services_council",
+      "target": "backend_src_services_council_reviewpersona",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/src/services/council.ts",
+      "source_location": "L93",
       "weight": 1.0
     },
     {
@@ -8306,13 +8749,24 @@
     },
     {
       "source": "backend_src_types",
+      "target": "backend_src_types_personareview",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/src/types.ts",
+      "source_location": "L39",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_types",
       "target": "backend_src_types_chairmanverdict",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/src/types.ts",
-      "source_location": "L38",
+      "source_location": "L46",
       "weight": 1.0
     },
     {
@@ -8323,7 +8777,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/src/types.ts",
-      "source_location": "L46",
+      "source_location": "L54",
       "weight": 1.0
     },
     {
@@ -8829,7 +9283,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/stores/sessions.ts",
-      "source_location": "L17",
+      "source_location": "L22",
       "weight": 1.0
     },
     {
@@ -8840,7 +9294,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/stores/sessions.ts",
-      "source_location": "L24",
+      "source_location": "L29",
       "weight": 1.0
     },
     {
@@ -8851,7 +9305,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/stores/sessions.ts",
-      "source_location": "L31",
+      "source_location": "L36",
       "weight": 1.0
     },
     {
@@ -9076,6 +9530,72 @@
     },
     {
       "source": "frontend_src_views_sessionresultsview",
+      "target": "frontend_src_views_sessionresultsview_sessiontitle",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "frontend/src/views/SessionResultsView.vue",
+      "source_location": "L104",
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_src_views_sessionresultsview",
+      "target": "frontend_src_views_sessionresultsview_status",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "frontend/src/views/SessionResultsView.vue",
+      "source_location": "L105",
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_src_views_sessionresultsview",
+      "target": "frontend_src_views_sessionresultsview_chairmanstatus",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "frontend/src/views/SessionResultsView.vue",
+      "source_location": "L106",
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_src_views_sessionresultsview",
+      "target": "frontend_src_views_sessionresultsview_chairmanerror",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "frontend/src/views/SessionResultsView.vue",
+      "source_location": "L107",
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_src_views_sessionresultsview",
+      "target": "frontend_src_views_sessionresultsview_personaverdicts",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "frontend/src/views/SessionResultsView.vue",
+      "source_location": "L108",
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_src_views_sessionresultsview",
+      "target": "frontend_src_views_sessionresultsview_allpersonascomplete",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "frontend/src/views/SessionResultsView.vue",
+      "source_location": "L109",
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_src_views_sessionresultsview",
       "target": "frontend_src_views_sessionresultsview_retryingpersona",
       "relation": "contains",
       "_origin": "ast",
@@ -9083,6 +9603,72 @@
       "confidence_score": 1.0,
       "source_file": "frontend/src/views/SessionResultsView.vue",
       "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_src_views_sessionresultsview",
+      "target": "frontend_src_views_sessionresultsview_allreviewscomplete",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "frontend/src/views/SessionResultsView.vue",
+      "source_location": "L110",
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_src_views_sessionresultsview",
+      "target": "frontend_src_views_sessionresultsview_anyreviewrunning",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "frontend/src/views/SessionResultsView.vue",
+      "source_location": "L111",
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_src_views_sessionresultsview",
+      "target": "frontend_src_views_sessionresultsview_anyreviewfailed",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "frontend/src/views/SessionResultsView.vue",
+      "source_location": "L112",
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_src_views_sessionresultsview",
+      "target": "frontend_src_views_sessionresultsview_reviewstarted",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "frontend/src/views/SessionResultsView.vue",
+      "source_location": "L113",
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_src_views_sessionresultsview",
+      "target": "frontend_src_views_sessionresultsview_reviewsdone",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "frontend/src/views/SessionResultsView.vue",
+      "source_location": "L114",
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_src_views_sessionresultsview",
+      "target": "frontend_src_views_sessionresultsview_averageranking",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "frontend/src/views/SessionResultsView.vue",
+      "source_location": "L117",
       "weight": 1.0
     },
     {
@@ -9109,13 +9695,35 @@
     },
     {
       "source": "frontend_src_views_sessionresultsview",
+      "target": "frontend_src_views_sessionresultsview_startingreview",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "frontend/src/views/SessionResultsView.vue",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_src_views_sessionresultsview",
+      "target": "frontend_src_views_sessionresultsview_retryingreview",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "frontend/src/views/SessionResultsView.vue",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_src_views_sessionresultsview",
       "target": "frontend_src_views_sessionresultsview_retrypersona",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/views/SessionResultsView.vue",
-      "source_location": "L31",
+      "source_location": "L34",
       "weight": 1.0
     },
     {
@@ -9126,18 +9734,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/views/SessionResultsView.vue",
-      "source_location": "L42",
+      "source_location": "L45",
       "weight": 1.0
     },
     {
       "source": "frontend_src_views_sessionresultsview",
-      "target": "frontend_src_views_sessionresultsview_retrychairman",
+      "target": "frontend_src_views_sessionresultsview_startreview",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/views/SessionResultsView.vue",
-      "source_location": "L53",
+      "source_location": "L56",
       "weight": 1.0
     },
     {
@@ -9153,13 +9761,13 @@
     },
     {
       "source": "frontend_src_views_sessionresultsview",
-      "target": "frontend_src_views_sessionresultsview_personalabels",
+      "target": "frontend_src_views_sessionresultsview_retryreview",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/views/SessionResultsView.vue",
-      "source_location": "L64",
+      "source_location": "L67",
       "weight": 1.0
     },
     {
@@ -9175,79 +9783,35 @@
     },
     {
       "source": "frontend_src_views_sessionresultsview",
+      "target": "frontend_src_views_sessionresultsview_retrychairman",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "frontend/src/views/SessionResultsView.vue",
+      "source_location": "L78",
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_src_views_sessionresultsview",
+      "target": "frontend_src_views_sessionresultsview_personalabels",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "frontend/src/views/SessionResultsView.vue",
+      "source_location": "L89",
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_src_views_sessionresultsview",
       "target": "frontend_src_views_sessionresultsview_recommendationcolor",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/views/SessionResultsView.vue",
-      "source_location": "L73",
-      "weight": 1.0
-    },
-    {
-      "source": "frontend_src_views_sessionresultsview",
-      "target": "frontend_src_views_sessionresultsview_sessiontitle",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "frontend/src/views/SessionResultsView.vue",
-      "source_location": "L79",
-      "weight": 1.0
-    },
-    {
-      "source": "frontend_src_views_sessionresultsview",
-      "target": "frontend_src_views_sessionresultsview_status",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "frontend/src/views/SessionResultsView.vue",
-      "source_location": "L80",
-      "weight": 1.0
-    },
-    {
-      "source": "frontend_src_views_sessionresultsview",
-      "target": "frontend_src_views_sessionresultsview_chairmanstatus",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "frontend/src/views/SessionResultsView.vue",
-      "source_location": "L81",
-      "weight": 1.0
-    },
-    {
-      "source": "frontend_src_views_sessionresultsview",
-      "target": "frontend_src_views_sessionresultsview_chairmanerror",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "frontend/src/views/SessionResultsView.vue",
-      "source_location": "L82",
-      "weight": 1.0
-    },
-    {
-      "source": "frontend_src_views_sessionresultsview",
-      "target": "frontend_src_views_sessionresultsview_personaverdicts",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "frontend/src/views/SessionResultsView.vue",
-      "source_location": "L83",
-      "weight": 1.0
-    },
-    {
-      "source": "frontend_src_views_sessionresultsview",
-      "target": "frontend_src_views_sessionresultsview_allpersonascomplete",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "frontend/src/views/SessionResultsView.vue",
-      "source_location": "L84",
+      "source_location": "L98",
       "weight": 1.0
     },
     {
@@ -10117,7 +10681,31 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "backend/src/routes/judge.ts",
-      "source_location": "L130",
+      "source_location": "L170",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_routes_judge_runchairmanandpersist",
+      "target": "backend_src_routes_judge_topersonaverdict",
+      "relation": "indirect_call",
+      "_origin": "ast",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "context": "argument",
+      "source_file": "backend/src/routes/judge.ts",
+      "source_location": "L102",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_routes_judge_runreviewandpersist",
+      "target": "backend_src_routes_judge_topersonaverdict",
+      "relation": "indirect_call",
+      "_origin": "ast",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "context": "argument",
+      "source_file": "backend/src/routes/judge.ts",
+      "source_location": "L145",
       "weight": 1.0
     },
     {
@@ -10326,5 +10914,5 @@
       "source_file": "README.md"
     }
   ],
-  "built_at_commit": "70c2a1b2a756fa423c491809e0eecb1afe4effa6"
+  "built_at_commit": "50afe890776275afbe1f316966422e19b1451a3c"
 }
