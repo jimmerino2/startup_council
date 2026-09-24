@@ -9,6 +9,8 @@ interface ProviderConfig {
   minIntervalMs: number;
   /** Send response_format json_object; off where the endpoint may not support it (the prompt still demands JSON). */
   jsonMode: boolean;
+  /** Completion cap; reasoning-heavy models need headroom or the JSON is cut off. */
+  maxTokens?: number;
 }
 
 export const MISTRAL: ProviderConfig = {
@@ -33,6 +35,8 @@ export const GONKA: ProviderConfig = {
   url: "https://api.gonkarouter.io/v1/chat/completions",
   minIntervalMs: 500,
   jsonMode: false,
+  // Gonka hosts reasoning models that write their chain of thought into `content`.
+  maxTokens: 6000,
 };
 
 interface ChatResponse {
@@ -101,7 +105,7 @@ export async function callOpenAICompatible(
             { role: "user", content: userPrompt },
           ],
           temperature: 0.4,
-          max_tokens: 1500,
+          max_tokens: cfg.maxTokens ?? 1500,
           ...(cfg.jsonMode ? { response_format: { type: "json_object" } } : {}),
           // gpt-oss models reason before answering; keep it short so the JSON fits in max_tokens.
           ...(modelId.startsWith("openai/gpt-oss") ? { reasoning_effort: "low" } : {}),
