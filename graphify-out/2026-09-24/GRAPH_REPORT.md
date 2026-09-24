@@ -1,19 +1,12 @@
 # Graph Report - startup_council  (2026-09-24)
 
 ## Corpus Check
-- 37 files · ~6,493 words
-- Verdict: corpus is large enough that graph structure adds value.
-- Unclassified: 19 file(s) not represented in the graph (top: (none) 13, .tsbuildinfo 2, .lock 1)
+- Corpus is ~6,466 words - fits in a single context window. You may not need a graph.
 
 ## Summary
-- 270 nodes · 355 edges · 16 communities (14 shown, 2 thin omitted)
+- 269 nodes · 354 edges · 16 communities (14 shown, 2 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 5 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
-
-## Graph Freshness
-- Built from commit: `51d957be`
-- Run `git rev-parse HEAD` and compare to check if the graph is stale.
-- Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - Council Personas & Models
@@ -37,12 +30,12 @@
 1. `compilerOptions` - 14 edges
 2. `compilerOptions` - 13 edges
 3. `compilerOptions` - 8 edges
-4. `judgeWithPersona()` - 6 edges
-5. `runChairman()` - 6 edges
-6. `runCouncil()` - 6 edges
-7. `callModel()` - 6 edges
-8. `requireAuth()` - 6 edges
-9. `express` - 6 edges
+4. `express` - 6 edges
+5. `requireAuth()` - 6 edges
+6. `judgeWithPersona()` - 6 edges
+7. `runCouncil()` - 6 edges
+8. `runChairman()` - 6 edges
+9. `callModel()` - 6 edges
 10. `vue` - 6 edges
 
 ## Surprising Connections (you probably didn't know these)
@@ -50,12 +43,12 @@
   backend/src/routes/judge.ts → backend/src/services/council.ts
 - `PersonaConfig` --references--> `PersonaKey`  [EXTRACTED]
   backend/src/config/personas.ts → backend/src/types.ts
-- `runChairman()` --calls--> `resolveChairmanModels()`  [EXTRACTED]
-  backend/src/services/council.ts → backend/src/config/personas.ts
 - `judgeWithPersona()` --calls--> `resolveModel()`  [EXTRACTED]
   backend/src/services/council.ts → backend/src/config/personas.ts
-- `judgeWithPersona()` --calls--> `callModel()`  [EXTRACTED]
-  backend/src/services/council.ts → backend/src/services/openrouter.ts
+- `runChairman()` --calls--> `resolveChairmanModels()`  [EXTRACTED]
+  backend/src/services/council.ts → backend/src/config/personas.ts
+- `requireAuth()` --calls--> `createAnonClient()`  [EXTRACTED]
+  backend/src/middleware/requireAuth.ts → backend/src/supabase/client.ts
 
 ## Import Cycles
 - None detected.
@@ -70,24 +63,24 @@ Cohesion: 0.11
 Nodes (28): CHAIRMAN_DEFAULT_MODEL, CHAIRMAN_FALLBACK_MODELS, CHAIRMAN_MODEL_ENV_VAR, CHAIRMAN_SYSTEM_PROMPT, PersonaConfig, PERSONAS, resolveChairmanModels(), resolveModel() (+20 more)
 
 ### Community 1 - "Express API & Auth"
-Cohesion: 0.12
-Nodes (21): app, missing, requiredEnvVars, AuthedRequest, requireAuth(), judgeRouter, SessionRow, sessionsRouter (+13 more)
+Cohesion: 0.11
+Nodes (23): app, missing, requiredEnvVars, AuthedRequest, requireAuth(), judgeRouter, SessionRow, sessionsRouter (+15 more)
 
 ### Community 2 - "Frontend API & Stores"
-Cohesion: 0.05
-Nodes (38): auth, router, api, supabase, app, router, useAuthStore, ChairmanVerdict (+30 more)
+Cohesion: 0.08
+Nodes (21): api, ChairmanVerdict, PersonaVerdict, SessionSummary, useSessionsStore, error, judgingCriteria, pitchText (+13 more)
 
 ### Community 3 - "Backend Dev Tooling"
-Cohesion: 0.09
-Nodes (20): @supabase/supabase-js, typescript, name, private, scripts, build, dev, start (+12 more)
+Cohesion: 0.07
+Nodes (26): devDependencies, tsx, @types/cors, @types/express, @types/multer, @types/node, @types/pdf-parse, typescript (+18 more)
 
 ### Community 4 - "Frontend Dependencies"
 Cohesion: 0.08
 Nodes (24): dependencies, pinia, @supabase/supabase-js, vue, vue-router, devDependencies, typescript, vite (+16 more)
 
 ### Community 5 - "Vue App & Supabase Client"
-Cohesion: 0.25
-Nodes (8): devDependencies, tsx, @types/cors, @types/express, @types/multer, @types/node, @types/pdf-parse, typescript
+Cohesion: 0.12
+Nodes (17): auth, router, supabase, app, router, useAuthStore, frontend_src_style, auth (+9 more)
 
 ### Community 6 - "Backend TS Config"
 Cohesion: 0.12
@@ -122,24 +115,24 @@ Cohesion: 1.00
 Nodes (3): #app mount point, Startup Council index.html, src/main.ts entry module
 
 ## Knowledge Gaps
-- **147 isolated node(s):** `requiredEnvVars`, `missing`, `RawChairmanJson`, `RawPersonaJson`, `OpenRouterMessage` (+142 more)
+- **147 isolated node(s):** `name`, `version`, `private`, `type`, `dev` (+142 more)
   These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 159 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **2 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `pinia` connect `Frontend API & Stores` to `Frontend Dependencies`?**
+- **Why does `pinia` connect `Vue App & Supabase Client` to `Frontend API & Stores`, `Frontend Dependencies`?**
   _High betweenness centrality (0.091) - this node is a cross-community bridge._
 - **Why does `express` connect `Express API & Auth` to `Backend Dev Tooling`?**
-  _High betweenness centrality (0.091) - this node is a cross-community bridge._
+  _High betweenness centrality (0.089) - this node is a cross-community bridge._
 - **Why does `@vercel/functions` connect `Express API & Auth` to `Backend Dev Tooling`?**
-  _High betweenness centrality (0.048) - this node is a cross-community bridge._
-- **What connects `requiredEnvVars`, `missing`, `RawChairmanJson` to the rest of the system?**
+  _High betweenness centrality (0.047) - this node is a cross-community bridge._
+- **What connects `name`, `version`, `private` to the rest of the system?**
   _147 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Council Personas & Models` be split into smaller, more focused modules?**
   _Cohesion score 0.11174242424242424 - nodes in this community are weakly interconnected._
 - **Should `Express API & Auth` be split into smaller, more focused modules?**
-  _Cohesion score 0.1206896551724138 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.10967741935483871 - nodes in this community are weakly interconnected._
 - **Should `Frontend API & Stores` be split into smaller, more focused modules?**
-  _Cohesion score 0.05200501253132832 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.07526881720430108 - nodes in this community are weakly interconnected._
