@@ -2,3 +2,7 @@ node_modules
 dist
 .env
 .env.local
+
+graphify-out/cost.json
+graphify-out/manifest.json
+graphify-out/converted/
