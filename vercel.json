@@ -9,7 +9,7 @@
       "root": "backend",
       "entrypoint": "api/index.ts",
       "functions": {
-        "api/index.ts": { "maxDuration": 300 }
+        "api/index.ts": { "maxDuration": 300, "includeFiles": "node_modules/**" }
       }
     }
   },
