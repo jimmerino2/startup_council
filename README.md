@@ -70,6 +70,41 @@ Judging is asynchronous: `POST /api/sessions/:id/judge` returns 202 and the coun
 (`maxDuration` is 300s for the backend service in `vercel.json`; your plan must allow that). The results page
 polls until the session leaves `pending`/`judging`. Uploads are capped at 4MB (Vercel's request body limit).
 
+## Supabase setup after deploying
+
+Do these once you have the deployed URL (referred to as `https://<your-domain>`):
+
+1. **Apply the database migration** to the hosted project (skip if already done):
+   ```bash
+   supabase login
+   supabase link --project-ref <your-project-ref>
+   supabase db push
+   ```
+   In Supabase → Table Editor, confirm `sessions`, `persona_verdicts` and `chairman_verdicts` exist with
+   RLS enabled.
+
+2. **Configure the auth URLs** in Supabase → Authentication → URL Configuration:
+   - **Site URL:** `https://<your-domain>`
+   - **Redirect URLs:** add `https://<your-domain>/**`. Keep `http://localhost:5173/**` for local dev, and add
+     `https://*-<your-vercel-team>.vercel.app/**` if you want magic links to work on preview deployments.
+
+   The app sends `emailRedirectTo: window.location.origin`, so the origin the user signed in from must be in this
+   list or the magic link falls back to the Site URL.
+
+3. **Check the email provider** in Authentication → Providers → Email (enabled). Supabase's built-in email sender is
+   heavily rate-limited (a few emails per hour), so for real users configure custom SMTP under
+   Authentication → Emails → SMTP Settings.
+
+4. **Use only the public key** in Vercel. `SUPABASE_ANON_KEY` and `VITE_SUPABASE_ANON_KEY` are the anon/publishable
+   key from Project Settings → API. Never add the service-role/secret key; the app doesn't use it and RLS
+   depends on requests carrying the user's token, not an admin key.
+
+5. **Redeploy** if you changed any environment variable. `VITE_*` values are baked in at build time.
+
+6. **Verify end to end:** open `https://<your-domain>/api/health` (expect `{"ok":true}`), sign in with a magic
+   link, submit a session, and confirm rows appear in `sessions`, `persona_verdicts` and `chairman_verdicts`.
+   Signing in as a second user should show none of the first user's sessions.
+
 ## Project structure
 
 ```
