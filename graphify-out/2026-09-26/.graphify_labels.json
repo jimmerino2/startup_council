@@ -1,7 +1,7 @@
 {
   "0": "council.ts",
-  "1": "modelRouter.ts",
-  "2": "router/index.ts",
+  "1": "types.ts",
+  "2": "stores/sessions.ts",
   "3": "settings.ts",
   "4": "backend/package.json",
   "5": "SessionResultsView.vue",
@@ -24,15 +24,5 @@
   "22": "lengthState",
   "23": "clearDraftStorage",
   "24": "isDirty",
-  "25": "addCriterion",
-  "26": "GraphCanvas.vue",
-  "27": "graph.ts",
-  "28": "FileDropZone.vue",
-  "29": "auth.ts",
-  "30": "stores/sessions.ts",
-  "31": "run",
-  "32": "AuthView.vue",
-  "33": "dependencies",
-  "34": "devDependencies",
-  "35": "scripts"
+  "25": "addCriterion"
 }
