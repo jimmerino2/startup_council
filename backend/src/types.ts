@@ -72,12 +72,20 @@ export interface EvidenceItem {
   sources: EvidenceSource[];
 }
 
+/** One reviewer's rank and critique of one other persona's verdict. */
+export interface ReviewEntry {
+  reviewed: PersonaKey;
+  /** 1 = best among the verdicts the reviewer saw. */
+  rank: number;
+  /** Short critique of this one verdict; null for reviews migrated from before critiques were stored. */
+  critique: string | null;
+}
+
 /** One persona's anonymous peer review of the other personas. */
 export interface PersonaReview {
   reviewer: PersonaKey;
-  critique: string;
-  /** The other personas, best first. */
-  ranking: PersonaKey[];
+  /** Sorted best first. */
+  entries: ReviewEntry[];
 }
 
 export interface ChairmanVerdict {

@@ -1,8 +1,9 @@
-import { PERSONAS, resolveChairmanModelTargets, resolveModelTarget, resolveClerkTarget, CHAIRMAN_SYSTEM_PROMPT, CLERK_SYSTEM_PROMPT, EVIDENCE_REQUEST_SYSTEM_PROMPT, EVIDENCE_EXTRACT_SYSTEM_PROMPT } from "../config/personas.js";
+import { PERSONAS, resolveChairmanModelTargets, resolveModelTarget, resolveClerkTargets, CHAIRMAN_SYSTEM_PROMPT, CLERK_SYSTEM_PROMPT, EVIDENCE_REQUEST_SYSTEM_PROMPT, EVIDENCE_EXTRACT_SYSTEM_PROMPT } from "../config/personas.js";
 import { extractJsonObject } from "./openrouter.js";
 import { callModel, callModelWithSearch } from "./modelRouter.js";
+import type { ModelTarget } from "./modelRouter.js";
 import { ModelCallError } from "./modelError.js";
-import type { ChairmanVerdict, EvidenceItem, EvidenceSource, PersonaKey, PersonaReview, PersonaVerdict, SessionInput, UserModelSettings } from "../types.js";
+import type { ChairmanVerdict, EvidenceItem, EvidenceSource, PersonaKey, PersonaReview, PersonaVerdict, ReviewEntry, SessionInput, UserModelSettings } from "../types.js";
 
 interface RawPersonaJson {
   verdict: string;
@@ -12,8 +13,7 @@ interface RawPersonaJson {
 }
 
 interface RawReviewJson {
-  critique: string;
-  ranking: string[];
+  reviews?: { response?: unknown; rank?: unknown; critique?: unknown }[];
 }
 
 interface RawChairmanJson {
@@ -132,7 +132,6 @@ export async function findEvidence(
   input: SessionInput,
   settings: UserModelSettings | undefined
 ): Promise<{ summary: string | null; sources: EvidenceSource[]; modelId: string }> {
-  const target = resolveClerkTarget(settings);
   const prompt = `Startup under review: ${input.title}
 Problem statement: ${input.problemStatement}
 
@@ -140,9 +139,26 @@ Find this for a council member:
 ${request.description}
 ${request.reason ? `Why they need it: ${request.reason}` : ""}`;
 
-  const { text, sources } = await callModelWithSearch(target, CLERK_SYSTEM_PROMPT, prompt);
-  if (sources.length === 0) return { summary: null, sources: [], modelId: target.modelId };
-  return { summary: text.trim().slice(0, 1500), sources: sources.slice(0, 5), modelId: target.modelId };
+  return withClerkFallback(settings, async (target) => {
+    const { text, sources } = await callModelWithSearch(target, CLERK_SYSTEM_PROMPT, prompt);
+    if (sources.length === 0) return { summary: null, sources: [], modelId: target.modelId };
+    return { summary: text.trim().slice(0, 1500), sources: sources.slice(0, 5), modelId: target.modelId };
+  });
+}
+
+/** Runs a clerk call on the clerk's model, moving to the next fallback model if it fails. Throws the last error. */
+async function withClerkFallback<T>(settings: UserModelSettings | undefined, run: (target: ModelTarget) => Promise<T>): Promise<T> {
+  const targets = resolveClerkTargets(settings);
+  let lastError: unknown;
+  for (const [i, target] of targets.entries()) {
+    try {
+      return await run(target);
+    } catch (err) {
+      lastError = err;
+      if (i < targets.length - 1) console.warn(`Clerk model ${target.modelId} failed (${err instanceof Error ? err.message : err}); trying ${targets[i + 1].modelId}`);
+    }
+  }
+  throw lastError;
 }
 
 /**
@@ -154,12 +170,11 @@ export async function extractEvidence(
   docs: { url: string; title: string; text: string }[],
   settings: UserModelSettings | undefined
 ): Promise<string | null> {
-  const target = resolveClerkTarget(settings);
   const prompt = `Request: ${request.description}
 ${request.reason ? `Why it was requested: ${request.reason}\n` : ""}
 ${docs.map((d, i) => `## Document ${i + 1}: ${d.title} (${d.url})\n${d.text.slice(0, 12_000)}`).join("\n\n")}`;
 
-  const { text } = await callModel(target, EVIDENCE_EXTRACT_SYSTEM_PROMPT, prompt);
+  const { text } = await withClerkFallback(settings, (target) => callModel(target, EVIDENCE_EXTRACT_SYSTEM_PROMPT, prompt));
   const out = text.trim();
   if (!out || out.toUpperCase().startsWith("NOT_FOUND")) return null;
   return out.slice(0, 1200);
@@ -168,10 +183,11 @@ ${docs.map((d, i) => `## Document ${i + 1}: ${d.title} (${d.url})\n${d.text.slic
 const LETTERS = "ABCDEFGHIJ";
 
 function reviewSystemPrompt(label: string, count: number): string {
-  return `You are the ${label} on a startup/hackathon idea review council, now in the anonymous peer-review round. You will see the original submission and ${count} other council members' verdicts, labelled Response A, B, C... with the authors hidden. Critique them briefly (which are most rigorous, which miss something important), then rank ALL of them from best to worst. Judge the quality of the reasoning, not whether it agrees with you. Respond with ONLY a JSON object (no markdown fences, no prose outside the JSON) matching exactly this shape:
+  return `You are the ${label} on a startup/hackathon idea review council, now in the anonymous peer-review round. You will see the original submission and ${count} other council members' verdicts, labelled Response A, B, C... with the authors hidden. Review EACH one separately: give it a rank and a short critique of that response alone (what it does rigorously, or what it misses). Ranks run from 1 (best) to ${count} (worst), each used exactly once. Judge the quality of the reasoning, not whether it agrees with you. Respond with ONLY a JSON object (no markdown fences, no prose outside the JSON) matching exactly this shape:
 {
-  "critique": "2-4 sentence critique of the responses, referring to them by letter",
-  "ranking": ["<letter of best>", "<next>", "..."]
+  "reviews": [
+    { "response": "<letter>", "rank": <1..${count}>, "critique": "1-2 sentence critique of this response only" }
+  ]
 }`;
 }
 
@@ -211,13 +227,21 @@ Concerns: ${v.concerns.join("; ")}`
     const { text } = await callModel(target, reviewSystemPrompt(persona.label, others.length), prompt);
     try {
       const parsed = extractJsonObject<RawReviewJson>(text);
-      const ranking: PersonaKey[] = [];
-      for (const raw of Array.isArray(parsed.ranking) ? parsed.ranking : []) {
-        const key = keyByLetter.get(String(raw).trim().toUpperCase().slice(0, 1));
-        if (key && !ranking.includes(key)) ranking.push(key);
+      const seen = new Set<PersonaKey>();
+      const picked: { reviewed: PersonaKey; givenRank: number; critique: string | null }[] = [];
+      for (const raw of Array.isArray(parsed.reviews) ? parsed.reviews : []) {
+        const key = keyByLetter.get(String(raw?.response ?? "").trim().toUpperCase().slice(0, 1));
+        if (!key || seen.has(key)) continue;
+        seen.add(key);
+        const givenRank = Number(raw.rank);
+        const critique = typeof raw.critique === "string" && raw.critique.trim() ? raw.critique.trim().slice(0, 500) : null;
+        picked.push({ reviewed: key, givenRank: Number.isFinite(givenRank) ? givenRank : Number.MAX_SAFE_INTEGER, critique });
       }
-      if (ranking.length === 0) throw new Error("ranking had no valid letters");
-      return { reviewer: persona.key, critique: parsed.critique ?? text, ranking };
+      if (picked.length === 0) throw new Error("no valid reviews (unknown response letters)");
+      // Normalise to 1..n in the order the reviewer's ranks imply, so ties or gaps can't skew averages.
+      picked.sort((a, b) => a.givenRank - b.givenRank);
+      const entries: ReviewEntry[] = picked.map((p, i) => ({ reviewed: p.reviewed, rank: i + 1, critique: p.critique }));
+      return { reviewer: persona.key, entries };
     } catch (err) {
       lastParseError = (err as Error).message;
       console.warn(`Review by ${persona.key} (${target.modelId}) unparseable on attempt ${attempt}/${MAX_PARSE_ATTEMPTS}`);
@@ -226,16 +250,21 @@ Concerns: ${v.concerns.join("; ")}`
   throw new Error(`Review by ${persona.key} (${target.modelId}) returned unparseable output: ${lastParseError}`);
 }
 
+function formatReviewForChairman(r: PersonaReview): string {
+  const lines = r.entries.map((e) => `- ${e.reviewed}, ranked #${e.rank}${e.critique ? `: ${e.critique}` : ""}`);
+  return `## Review by ${r.reviewer}\n${lines.join("\n")}`;
+}
+
 /** Mean rank position (1 = best) per persona across all reviews that ranked it. */
 export function averageRanks(reviews: PersonaReview[]): Map<PersonaKey, number> {
   const totals = new Map<PersonaKey, { sum: number; n: number }>();
   for (const r of reviews) {
-    r.ranking.forEach((key, i) => {
-      const t = totals.get(key) ?? { sum: 0, n: 0 };
-      t.sum += i + 1;
+    for (const e of r.entries) {
+      const t = totals.get(e.reviewed) ?? { sum: 0, n: 0 };
+      t.sum += e.rank;
       t.n += 1;
-      totals.set(key, t);
-    });
+      totals.set(e.reviewed, t);
+    }
   }
   return new Map([...totals].map(([k, t]) => [k, t.sum / t.n]));
 }
@@ -281,7 +310,7 @@ Average rank by peers (1 = best): ${
       .join(", ") || "n/a"
   }
 
-${reviews.map((r) => `## Review by ${r.reviewer}\n${r.critique}\nRanking: ${r.ranking.join(" > ")}`).join("\n\n")}`;
+${reviews.map(formatReviewForChairman).join("\n\n")}`;
 
   const candidates = resolveChairmanModelTargets(settings);
   const failures: string[] = [];

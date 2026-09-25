@@ -13,10 +13,17 @@ export interface PersonaVerdict {
   strengths: string[];
   concerns: string[];
   review_status: RoleStatus;
-  review_critique: string | null;
-  /** The other personas this one ranked, best first. */
-  review_ranking: string[];
   review_error: string | null;
+}
+
+/** One reviewer's rank and critique of one other persona's verdict. */
+export interface PeerReview {
+  reviewer_key: string;
+  reviewed_key: string;
+  /** 1 = best among the verdicts the reviewer saw. */
+  rank: number;
+  /** Null for reviews made before critiques were stored per verdict. */
+  critique: string | null;
 }
 
 export interface EvidenceRequest {
@@ -69,6 +76,7 @@ export const useSessionsStore = defineStore("sessions", {
       chairmanVerdict: ChairmanVerdict | null;
       evidenceRequests: EvidenceRequest[];
       evidenceDocuments: EvidenceDocument[];
+      peerReviews: PeerReview[];
     } | null,
     loading: false,
     error: null as string | null,
@@ -140,6 +148,10 @@ export const useSessionsStore = defineStore("sessions", {
       pitchText: string;
       sourceFiles: { filename: string; type: string }[];
       personas?: string[];
+      eventType?: string;
+      stage?: string;
+      links?: string[];
+      criteria?: { name: string; description: string; weight: number | null }[];
     }): Promise<string> {
       const created = await api.createSession(input);
       return created.id;

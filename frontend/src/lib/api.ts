@@ -18,6 +18,38 @@ async function handle<T>(res: Response): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+export interface GraphNode {
+  id: string;
+  kind: "source" | "persona" | "chairman" | "evidence" | "review" | "verdict" | "final_verdict";
+  label: string;
+  score?: number | null;
+  status?: string | null;
+  recommendation?: string | null;
+  /** Review nodes: the critique text and the rank given. */
+  critique?: string | null;
+  rank?: number;
+  /** Longer text for the detail panel (a verdict, the final verdict, or a critique). */
+  text?: string | null;
+  strengths?: string[];
+  concerns?: string[];
+  subtitle?: string;
+  /** Heading for the detail panel when the label is only an excerpt. */
+  title?: string;
+}
+
+export interface GraphEdge {
+  source: string;
+  target: string;
+  kind: "cites" | "reviewed" | "wrote" | "about" | "requested" | "advises" | "verdict" | "concludes";
+  weight: number;
+  critique?: string | null;
+}
+
+export interface GraphData {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+}
+
 export const api = {
   async createSession(input: {
     title: string;
@@ -27,6 +59,11 @@ export const api = {
     sourceFiles: { filename: string; type: string }[];
     /** Persona keys to run; omit for the whole council. */
     personas?: string[];
+    eventType?: string;
+    stage?: string;
+    links?: string[];
+    /** Rubric rows when the criteria were built in the rubric editor. */
+    criteria?: { name: string; description: string; weight: number | null }[];
   }) {
     const res = await fetch(`${API_BASE_URL}/api/sessions`, {
       method: "POST",
@@ -106,6 +143,12 @@ export const api = {
       headers: await authHeaders(),
     });
     return handle<Record<string, unknown>>(res);
+  },
+
+  /** `reviewNodes` draws each peer review as its own node instead of a single arrow. */
+  async getSessionGraph(id: string, { reviewNodes = false }: { reviewNodes?: boolean } = {}) {
+    const res = await fetch(`${API_BASE_URL}/api/sessions/${id}/graph${reviewNodes ? "?detail=reviews" : ""}`, { headers: await authHeaders() });
+    return handle<GraphData>(res);
   },
 
   async extractFile(file: File) {

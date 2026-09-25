@@ -359,19 +359,12 @@ const canSubmit = computed(
     !criteriaError.value,
 );
 
-/** Optional context and the problem statement are stored together in the problem statement column. */
-const composedProblem = computed(() => {
-  const lines: string[] = [];
-  if (eventType.value) lines.push(`- Event type: ${eventType.value}`);
-  if (stage.value) lines.push(`- Stage: ${stage.value}`);
-  const linkList = links.value.split(/[\n,]+/).map((l) => l.trim()).filter(Boolean);
-  if (linkList.length) lines.push(`- Links: ${linkList.join(", ")}`);
-
-  const parts: string[] = [];
-  if (lines.length) parts.push(`Context:\n${lines.join("\n")}`);
-  if (text.problemStatement.trim()) parts.push(text.problemStatement.trim());
-  return parts.join("\n\n") || "Not provided.";
-});
+const linkList = computed(() =>
+  links.value
+    .split(/[\n,]+/)
+    .map((l) => l.trim())
+    .filter(Boolean),
+);
 
 async function submit() {
   if (!canSubmit.value) return;
@@ -380,7 +373,11 @@ async function submit() {
   try {
     const id = await store.create({
       title: title.value,
-      problemStatement: composedProblem.value,
+      problemStatement: text.problemStatement,
+      eventType: eventType.value || undefined,
+      stage: stage.value || undefined,
+      links: linkList.value,
+      criteria: criteriaMode.value === "structured" ? namedCriteria.value : undefined,
       judgingCriteria: finalCriteria.value,
       pitchText: text.pitchText,
       sourceFiles: sourceFiles.value,

@@ -6,6 +6,7 @@ import { PERSONAS, resolveModelTarget } from "../config/personas.js";
 import { judgePersona, reviewPersona, runChairmanSynthesis } from "../services/council.js";
 import { loadUserModelSettings } from "../services/loadUserModelSettings.js";
 import { loadEvidence, retryEvidenceRequest, runEvidenceStage } from "../services/evidencePipeline.js";
+import { composeProblemStatement } from "../services/sessionContext.js";
 import type { PersonaKey, PersonaReview, PersonaVerdict, SessionInput, UserModelSettings } from "../types.js";
 
 export const judgeRouter = Router();
@@ -26,6 +27,9 @@ interface SessionRow {
   evidence_status: string;
   /** Null means the whole council. */
   persona_keys: PersonaKey[] | null;
+  event_type: string | null;
+  stage: string | null;
+  links: string[] | null;
 }
 
 /** The personas taking part in this session. */
@@ -37,14 +41,19 @@ function activePersonas(session: SessionRow) {
 function toSessionInput(session: SessionRow): SessionInput {
   return {
     title: session.title,
-    problemStatement: session.problem_statement,
+    problemStatement: composeProblemStatement({
+      eventType: session.event_type,
+      stage: session.stage,
+      links: session.links,
+      problemStatement: session.problem_statement,
+    }),
     judgingCriteria: session.judging_criteria,
     pitchText: session.pitch_text,
   };
 }
 
 // A persona's review depends on the other personas' verdicts, so re-running a persona clears reviews.
-const RESET_REVIEW = { review_status: "pending", review_critique: null, review_ranking: [], review_error: null };
+const RESET_REVIEW = { review_status: "pending", review_error: null };
 
 const VERDICT_COLUMNS = "persona_key, model_id, verdict_text, score, strengths, concerns, raw_response";
 
@@ -101,22 +110,36 @@ async function runPersonaAndPersist(
   }
 }
 
+/** Reads the stored peer reviews as one PersonaReview per reviewer (sorted best first). */
+async function loadPeerReviews(supabase: SupabaseClient, sessionId: string, reviewers: PersonaKey[]): Promise<PersonaReview[]> {
+  const { data } = await supabase.from("peer_reviews").select("reviewer_key, reviewed_key, rank, critique").eq("session_id", sessionId).order("rank", { ascending: true });
+  return reviewers
+    .map((reviewer) => ({
+      reviewer,
+      entries: (data ?? []).filter((r) => r.reviewer_key === reviewer).map((r) => ({ reviewed: r.reviewed_key as PersonaKey, rank: r.rank as number, critique: r.critique as string | null })),
+    }))
+    .filter((r) => r.entries.length > 0);
+}
+
+/** Drops stored peer reviews: one reviewer's, or (no key) the whole session's, e.g. after a verdict changes. */
+async function clearPeerReviews(supabase: SupabaseClient, sessionId: string, reviewerKey?: string) {
+  let query = supabase.from("peer_reviews").delete().eq("session_id", sessionId);
+  if (reviewerKey) query = query.eq("reviewer_key", reviewerKey);
+  await query;
+}
+
 /** Runs the chairman from whatever persona verdicts are currently complete and writes the result. */
 async function runChairmanAndPersist(supabase: SupabaseClient, session: SessionRow, settings: UserModelSettings | undefined) {
   await supabase.from("sessions").update({ chairman_status: "running", chairman_error: null }).eq("id", session.id);
 
   const { data: rows } = await supabase
     .from("persona_verdicts")
-    .select(`${VERDICT_COLUMNS}, review_critique, review_ranking`)
+    .select(VERDICT_COLUMNS)
     .eq("session_id", session.id)
     .eq("status", "complete");
 
   const personaVerdicts: PersonaVerdict[] = (rows ?? []).map(toPersonaVerdict);
-  const reviews: PersonaReview[] = (rows ?? []).map((r) => ({
-    reviewer: r.persona_key,
-    critique: r.review_critique ?? "",
-    ranking: r.review_ranking ?? [],
-  }));
+  const reviews = await loadPeerReviews(supabase, session.id, (rows ?? []).map((r) => r.persona_key as PersonaKey));
 
   try {
     const chairman = await runChairmanSynthesis(toSessionInput(session), personaVerdicts, reviews, await loadEvidence(supabase, session.id), settings, Date.now() + CHAIRMAN_DEADLINE_MS);
@@ -158,9 +181,22 @@ async function runReviewAndPersist(
     // unless the user chose the cheaper "own evidence only" mode in Settings.
     const evidence = await loadEvidence(supabase, session.id, settings?.peerReviewEvidence === "own" ? personaKey : undefined);
     const review = await reviewPersona(persona, toSessionInput(session), (rows ?? []).map(toPersonaVerdict), settings, evidence);
+    // One row per reviewed persona. Replace any earlier attempt by this reviewer.
+    await clearPeerReviews(supabase, session.id, personaKey);
+    const { error: insertError } = await supabase.from("peer_reviews").insert(
+      review.entries.map((e) => ({
+        session_id: session.id,
+        user_id: session.user_id,
+        reviewer_key: personaKey,
+        reviewed_key: e.reviewed,
+        rank: e.rank,
+        critique: e.critique,
+      }))
+    );
+    if (insertError) throw new Error(`Could not save review: ${insertError.message}`);
     await supabase
       .from("persona_verdicts")
-      .update({ review_status: "complete", review_critique: review.critique, review_ranking: review.ranking, review_error: null })
+      .update({ review_status: "complete", review_error: null })
       .match(where);
     return true;
   } catch (err) {
@@ -302,6 +338,7 @@ judgeRouter.post("/:id/personas/:personaKey/retry", requireAuth, async (req, res
 
   // Every other persona's review saw the old verdict, so they all go back to pending.
   await supabase.from("persona_verdicts").update(RESET_REVIEW).eq("session_id", id);
+  await clearPeerReviews(supabase, id);
 
   const settings = await loadUserModelSettings(supabase, user.id);
   waitUntil(runPersonaAndPersist(supabase, session, personaKey as PersonaKey, settings));

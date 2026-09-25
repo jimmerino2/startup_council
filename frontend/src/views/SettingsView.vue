@@ -8,8 +8,10 @@ type Provider = "openrouter" | "gemini" | "mistral" | "groq" | "gonka";
 // slugs are the same ones used as system defaults in backend/src/config/personas.ts.
 const MODELS_BY_PROVIDER: Record<Provider, { value: string; label: string }[]> = {
   openrouter: [
-    { value: "nex-agi/nex-n2.5-pro:free", label: "Nex N2.5 Pro (free)" },
-    { value: "nex-agi/nex-n2.5-mini:free", label: "Nex N2.5 Mini (free)" },
+    { value: "z-ai/glm-5.2:free", label: "GLM 5.2 (free)" },
+    { value: "qwen/qwen3.8-27b:free", label: "Qwen 3.8 27B (free)" },
+    { value: "google/gemma-4-31b-it:free", label: "Gemma 4 31B (free)" },
+    { value: "nvidia/nemotron-3-super-120b-a12b:free", label: "Nemotron 3 Super (free)" },
     { value: "nvidia/nemotron-3-ultra-550b-a55b:free", label: "Nemotron 3 Ultra (free)" },
     { value: "dots-studio/dots-3-note-preview:free", label: "Dots 3 Note Preview (free)" },
     { value: "cohere/north-mini-code:free", label: "North Mini Code (free)" },

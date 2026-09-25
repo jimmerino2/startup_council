@@ -25,7 +25,7 @@ export const PERSONAS: PersonaConfig[] = [
     key: "judge",
     label: "Judge",
     defaults: {
-      openrouter: { defaultModel: "nex-agi/nex-n2.5-pro:free" },
+      openrouter: { defaultModel: "z-ai/glm-5.2:free" },
       gemini: { defaultModel: "gemini-3.5-flash-lite" },
       mistral: { defaultModel: "mistral-small-latest" },
       groq: { defaultModel: "openai/gpt-oss-20b" },
@@ -61,7 +61,7 @@ export const PERSONAS: PersonaConfig[] = [
     key: "market_analyst",
     label: "Market Analyst",
     defaults: {
-      openrouter: { defaultModel: "nex-agi/nex-n2.5-mini:free" },
+      openrouter: { defaultModel: "qwen/qwen3.8-27b:free" },
       gemini: { defaultModel: "gemini-3.5-flash-lite" },
       mistral: { defaultModel: "mistral-small-latest" },
       groq: { defaultModel: "openai/gpt-oss-20b" },
@@ -106,7 +106,7 @@ export const CHAIRMAN_DEFAULTS: Record<Provider, ProviderDefault> = {
 // Unlike personas (where a quorum tolerates one flaking), the chairman is a single
 // required call with no redundancy — so if it fails after retries, we fall back to
 // trying these OpenRouter models in order rather than failing the whole judging run.
-export const CHAIRMAN_FALLBACK_MODELS = ["nex-agi/nex-n2.5-mini:free", "cohere/north-mini-code:free"];
+export const CHAIRMAN_FALLBACK_MODELS = ["nvidia/nemotron-3-super-120b-a12b:free", "cohere/north-mini-code:free"];
 
 export const CHAIRMAN_SYSTEM_PROMPT = `You are the Chairman of a startup/hackathon idea review council. You have received independent written verdicts from six council members: Judge, Skeptic, Optimist, Market Analyst, Technical Feasibility Lead, and Reality Checker, followed by an anonymous peer-review round in which each member critiqued and ranked the others. Synthesize everything into one final decision. Give weight to which verdicts the peers ranked highest and to their critiques, not just the raw scores. Weigh the Judge's rubric-based score most heavily, but factor in the risks the Skeptic raised and the upside the Optimist raised. Respond with ONLY a JSON object (no markdown fences, no prose outside the JSON) matching exactly this shape:
 {
@@ -123,7 +123,7 @@ function defaultModelFor(provider: Provider, defaults: Record<Provider, Provider
 export const CLERK_PROVIDERS: Provider[] = ["openrouter", "gemini"];
 
 const CLERK_DEFAULT_MODELS: Partial<Record<Provider, string>> = {
-  openrouter: "nex-agi/nex-n2.5-mini:free",
+  openrouter: "nvidia/nemotron-3-super-120b-a12b:free",
   gemini: "gemini-3.5-flash-lite",
 };
 
@@ -136,12 +136,23 @@ export function maxEvidenceFor(settings: UserModelSettings | undefined): number 
   return Math.max(0, Math.min(MAX_EVIDENCE_LIMIT, n));
 }
 
+// Free OpenRouter models are shared and often return 429 ("Provider returned error"), so when the
+// clerk's model fails, these are tried in turn (OpenRouter only) instead of failing the request.
+export const CLERK_FALLBACK_MODELS = ["qwen/qwen3.8-27b:free", "google/gemma-4-31b-it:free"];
+
 /** The clerk's provider/model. A saved provider that can't search the web is ignored. */
 export function resolveClerkTarget(settings: UserModelSettings | undefined): ModelTarget {
   const override = settings?.models.clerk;
   const provider = override && CLERK_PROVIDERS.includes(override.provider) ? override.provider : "openrouter";
   const modelId = (override?.provider === provider && override.modelId.trim()) || CLERK_DEFAULT_MODELS[provider]!;
   return targetFor(provider, modelId, settings);
+}
+
+/** The clerk's model first, then (on OpenRouter) the fallbacks, skipping the one already chosen. */
+export function resolveClerkTargets(settings: UserModelSettings | undefined): ModelTarget[] {
+  const primary = resolveClerkTarget(settings);
+  if (primary.provider !== "openrouter") return [primary];
+  return [primary, ...CLERK_FALLBACK_MODELS.filter((m) => m !== primary.modelId).map((modelId) => targetFor("openrouter", modelId, settings))];
 }
 
 export const EVIDENCE_REQUEST_SYSTEM_PROMPT = (label: string, max: number) =>

@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useSessionsStore } from "../stores/sessions";
-import type { PersonaVerdict } from "../stores/sessions";
+import type { PeerReview, PersonaVerdict } from "../stores/sessions";
+import { api, type GraphData, type GraphNode } from "../lib/api";
+import GraphCanvas from "../components/GraphCanvas.vue";
 
 const props = defineProps<{ id: string }>();
 const store = useSessionsStore();
@@ -71,6 +73,10 @@ const requesterNames = (e: { requested_by?: string[]; persona_key: string }) =>
   (e.requested_by?.length ? e.requested_by : [e.persona_key]).map((k) => personaLabels[k] ?? k).join(", ");
 const documentsFor = (requestId: string) => (store.current?.evidenceDocuments ?? []).filter((d) => d.request_id === requestId);
 const personaVerdicts = computed<PersonaVerdict[]>(() => store.current?.personaVerdicts ?? []);
+const peerReviews = computed<PeerReview[]>(() => store.current?.peerReviews ?? []);
+
+/** The reviews one persona wrote, best rank first. */
+const reviewsBy = (key: string) => peerReviews.value.filter((r) => r.reviewer_key === key).sort((a, b) => a.rank - b.rank);
 
 // Once verdicts exist the evidence is locked, so retries are only offered before that.
 const verdictsStarted = computed(() => personaVerdicts.value.length > 0);
@@ -94,16 +100,49 @@ const verdictsDone = computed(() => personaVerdicts.value.filter((v) => v.status
 /** Mean rank (1 = best) each persona received from the peers that ranked it. */
 const averageRanking = computed(() => {
   const totals: Record<string, { sum: number; n: number }> = {};
-  for (const v of personaVerdicts.value) {
-    (v.review_ranking ?? []).forEach((key, i) => {
-      const t = (totals[key] ??= { sum: 0, n: 0 });
-      t.sum += i + 1;
-      t.n += 1;
-    });
+  for (const r of peerReviews.value) {
+    const t = (totals[r.reviewed_key] ??= { sum: 0, n: 0 });
+    t.sum += r.rank;
+    t.n += 1;
   }
   return Object.entries(totals)
     .map(([key, t]) => ({ key, avg: t.sum / t.n }))
     .sort((a, b) => a.avg - b.avg);
+});
+
+// The council graph is rebuilt server-side from stored rows (no model calls). It only reloads when
+// something it shows changes, so the layout doesn't restart on every poll.
+const graph = ref<GraphData | null>(null);
+const graphError = ref<string | null>(null);
+const graphSignature = computed(() =>
+  [
+    personaVerdicts.value.map((v) => `${v.persona_key}:${v.status}:${v.review_status}`).join(","),
+    store.current?.evidenceRequests.map((e) => `${e.id}:${e.status}`).join(",") ?? "",
+    peerReviews.value.length,
+    chairmanStatus.value,
+  ].join("|"),
+);
+
+const showReviewNodes = ref(false);
+const selectedNodeId = ref<string | null>(null);
+// Looked up in the current graph so the panel stays in sync when the graph reloads.
+const selectedNode = computed<GraphNode | null>(() => graph.value?.nodes.find((n) => n.id === selectedNodeId.value) ?? null);
+const onGraphSelect = (node: GraphNode | null) => {
+  selectedNodeId.value = node?.id ?? null;
+};
+
+async function loadGraph() {
+  try {
+    graph.value = await api.getSessionGraph(props.id, { reviewNodes: showReviewNodes.value });
+    graphError.value = null;
+  } catch (err) {
+    graphError.value = (err as Error).message;
+  }
+}
+
+watch(showReviewNodes, loadGraph);
+watch(graphSignature, () => {
+  if (personaVerdicts.value.length > 0) loadGraph();
 });
 
 function isInFlight() {
@@ -113,6 +152,7 @@ function isInFlight() {
 
 onMounted(async () => {
   await store.fetchOne(props.id);
+  if (personaVerdicts.value.length > 0) loadGraph();
   timer = setInterval(() => {
     if (isInFlight()) store.fetchOne(props.id, { silent: true });
   }, POLL_INTERVAL_MS);
@@ -230,8 +270,12 @@ onUnmounted(() => clearInterval(timer));
             </div>
             <p class="muted">Model: {{ v.model_id }}</p>
             <div v-if="v.review_status === 'complete'" class="muted" style="margin-top: 0.75rem">
-              <strong>Peer review by this member:</strong> {{ v.review_critique }}
-              <div>Ranking: {{ v.review_ranking.map((k) => personaLabels[k] ?? k).join(" > ") }}</div>
+              <strong>Peer review by this member:</strong>
+              <ol class="review-list">
+                <li v-for="r in reviewsBy(v.persona_key)" :key="r.reviewed_key">
+                  <strong>{{ personaLabels[r.reviewed_key] ?? r.reviewed_key }}</strong> (rank {{ r.rank }})<template v-if="r.critique">: {{ r.critique }}</template>
+                </li>
+              </ol>
             </div>
             <template v-else-if="v.review_status === 'failed'">
               <p class="error-text">Review failed: {{ v.review_error }}</p>
@@ -302,6 +346,66 @@ onUnmounted(() => clearInterval(timer));
           </button>
         </template>
       </div>
+
+      <!-- Graph -->
+      <div v-if="personaVerdicts.length > 0" class="card">
+        <h3>Council graph</h3>
+        <p class="muted">
+          Blue circles are council members, sized by score. Dashed arrows are peer rankings (thicker = ranked higher). Grey nodes
+          are evidence requests, teal nodes are the sites they cited. Click a node to highlight its links.
+        </p>
+        <label class="muted" style="display: block; margin-bottom: 0.5rem">
+          <input v-model="showReviewNodes" type="checkbox" /> Show each peer review as a node (hover for its critique)
+        </label>
+        <p v-if="graphError" class="error-text">{{ graphError }}</p>
+        <GraphCanvas v-else-if="graph" :graph="graph" :height="420" @select="onGraphSelect" />
+        <p v-else class="muted">Loading…</p>
+
+        <div class="node-detail" aria-live="polite">
+          <p v-if="!selectedNode" class="muted">Click a member, a verdict, the chairman, or a review node to read its full text here.</p>
+          <template v-else>
+            <h4>
+              {{ selectedNode.title ?? selectedNode.label }}
+              <span v-if="selectedNode.score !== undefined && selectedNode.score !== null" class="muted">· {{ selectedNode.score }}/10</span>
+              <span v-if="selectedNode.recommendation" class="status-badge">{{ selectedNode.recommendation }}</span>
+            </h4>
+            <p v-if="selectedNode.subtitle" class="muted">{{ selectedNode.subtitle }}</p>
+            <p v-if="selectedNode.text">{{ selectedNode.text }}</p>
+            <p v-else-if="selectedNode.kind === 'persona' || selectedNode.kind === 'chairman' || selectedNode.kind === 'verdict'" class="muted">No verdict yet.</p>
+            <p v-else-if="selectedNode.kind === 'review'" class="muted">No critique recorded for this review.</p>
+            <div v-if="selectedNode.strengths?.length">
+              <strong>Strengths:</strong>
+              <ul>
+                <li v-for="s in selectedNode.strengths" :key="s">{{ s }}</li>
+              </ul>
+            </div>
+            <div v-if="selectedNode.concerns?.length">
+              <strong>Concerns:</strong>
+              <ul>
+                <li v-for="c in selectedNode.concerns" :key="c">{{ c }}</li>
+              </ul>
+            </div>
+          </template>
+        </div>
+      </div>
     </template>
   </div>
 </template>
+
+<style scoped>
+.node-detail {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+.node-detail h4 {
+  margin: 0 0 0.35rem;
+}
+.review-list {
+  margin: 0.25rem 0 0;
+  padding-left: 1.25rem;
+}
+.review-list li {
+  margin-bottom: 0.3rem;
+}
+</style>
