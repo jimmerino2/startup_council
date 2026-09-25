@@ -139,6 +139,7 @@ export const useSessionsStore = defineStore("sessions", {
       judgingCriteria: string;
       pitchText: string;
       sourceFiles: { filename: string; type: string }[];
+      personas?: string[];
     }): Promise<string> {
       const created = await api.createSession(input);
       return created.id;

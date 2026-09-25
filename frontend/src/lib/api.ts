@@ -25,6 +25,8 @@ export const api = {
     judgingCriteria: string;
     pitchText: string;
     sourceFiles: { filename: string; type: string }[];
+    /** Persona keys to run; omit for the whole council. */
+    personas?: string[];
   }) {
     const res = await fetch(`${API_BASE_URL}/api/sessions`, {
       method: "POST",

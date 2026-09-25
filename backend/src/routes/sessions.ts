@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { requireAuth, type AuthedRequest } from "../middleware/requireAuth.js";
+import { PERSONAS } from "../config/personas.js";
 
 export const sessionsRouter = Router();
 
@@ -7,10 +8,24 @@ sessionsRouter.use(requireAuth);
 
 sessionsRouter.post("/", async (req, res) => {
   const { user, supabase } = req as unknown as AuthedRequest;
-  const { title, problemStatement, judgingCriteria, pitchText, sourceFiles } = req.body ?? {};
+  const { title, problemStatement, judgingCriteria, pitchText, sourceFiles, personas } = req.body ?? {};
 
   if (!title || !problemStatement || !judgingCriteria || !pitchText) {
     return res.status(400).json({ error: "title, problemStatement, judgingCriteria, and pitchText are required" });
+  }
+
+  // Optional subset of the council. Omitted (or all six) is stored as null, meaning everyone.
+  let personaKeys: string[] | null = null;
+  if (personas !== undefined && personas !== null) {
+    const known = PERSONAS.map((p) => p.key as string);
+    if (!Array.isArray(personas) || personas.some((k) => typeof k !== "string" || !known.includes(k))) {
+      return res.status(400).json({ error: "personas must be a list of known persona keys" });
+    }
+    const unique = [...new Set(personas as string[])];
+    if (unique.length < 2) {
+      return res.status(400).json({ error: "Select at least 2 personas (peer review needs someone to review)" });
+    }
+    personaKeys = unique.length === known.length ? null : known.filter((k) => unique.includes(k));
   }
 
   const { data, error } = await supabase
@@ -22,6 +37,7 @@ sessionsRouter.post("/", async (req, res) => {
       judging_criteria: judgingCriteria,
       pitch_text: pitchText,
       source_files: sourceFiles ?? [],
+      persona_keys: personaKeys,
       status: "pending",
     })
     .select()

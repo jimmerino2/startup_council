@@ -61,6 +61,8 @@ const sessionTitle = computed(() => (store.current?.session?.title as string) ??
 const status = computed(() => (store.current?.session?.status as string) ?? "");
 const evidenceStatus = computed(() => (store.current?.session?.evidence_status as string) ?? "pending");
 const evidenceError = computed(() => (store.current?.session?.evidence_error as string | null) ?? null);
+/** How many personas this session runs (sessions from before persona selection have all 6). */
+const personaCount = computed(() => (store.current?.session?.persona_keys as string[] | null)?.length ?? 6);
 const chairmanStatus = computed(() => (store.current?.session?.chairman_status as string) ?? "pending");
 const chairmanError = computed(() => (store.current?.session?.chairman_error as string | null) ?? null);
 
@@ -196,12 +198,12 @@ onUnmounted(() => clearInterval(timer));
         <h3>Step 2 · Initial verdicts</h3>
         <p v-if="!evidenceReady && !verdictsStarted" class="muted">Available once step 1 has finished successfully.</p>
         <template v-else-if="!verdictsStarted">
-          <p class="muted">Each council member scores the submission using the evidence it requested. This makes 6 model calls.</p>
+          <p class="muted">Each council member scores the submission using the evidence it requested. This makes {{ personaCount }} model calls.</p>
           <button class="btn" :disabled="busy === 'verdicts'" @click="startVerdicts">
             {{ busy === "verdicts" ? "Starting…" : "Proceed to initial verdicts" }}
           </button>
         </template>
-        <p v-else class="muted">{{ verdictsDone }}/6 verdicts complete.</p>
+        <p v-else class="muted">{{ verdictsDone }}/{{ personaCount }} verdicts complete.</p>
       </div>
 
       <template v-if="verdictsStarted">
@@ -253,10 +255,10 @@ onUnmounted(() => clearInterval(timer));
       <!-- Step 3 -->
       <div class="card">
         <h3>Step 3 · Anonymous peer review</h3>
-        <p v-if="!allPersonasComplete" class="muted">Available once all 6 initial verdicts are in.</p>
-        <p v-else-if="anyReviewRunning" class="muted">Council members are reviewing each other's verdicts anonymously… ({{ reviewsDone }}/6 done)</p>
+        <p v-if="!allPersonasComplete" class="muted">Available once all {{ personaCount }} initial verdicts are in.</p>
+        <p v-else-if="anyReviewRunning" class="muted">Council members are reviewing each other's verdicts anonymously… ({{ reviewsDone }}/{{ personaCount }} done)</p>
         <template v-else-if="allReviewsComplete">
-          <p class="muted">All 6 reviews are in. Average rank from peers (1 = best):</p>
+          <p class="muted">All {{ personaCount }} reviews are in. Average rank from peers (1 = best):</p>
           <ol>
             <li v-for="r in averageRanking" :key="r.key">{{ personaLabels[r.key] ?? r.key }}: {{ r.avg.toFixed(1) }}</li>
           </ol>
@@ -264,7 +266,7 @@ onUnmounted(() => clearInterval(timer));
         <template v-else>
           <p v-if="anyReviewFailed" class="error-text">Some reviews failed. Retry them on their cards, or run the remaining ones again.</p>
           <p v-else class="muted">
-            Each member reads the others' verdicts with names hidden, along with the evidence, then critiques and ranks them. This makes 6 more model calls.
+            Each member reads the others' verdicts with names hidden, along with the evidence, then critiques and ranks them. This makes {{ personaCount }} more model calls.
           </p>
           <button class="btn" :disabled="busy === 'review'" @click="startReview">
             {{ busy === "review" ? "Starting…" : reviewStarted ? "Run remaining reviews" : "Proceed to peer review" }}
