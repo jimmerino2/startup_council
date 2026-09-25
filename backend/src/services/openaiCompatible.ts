@@ -1,4 +1,4 @@
-import { ModelCallError } from "./modelError.js";
+import { KeyLimitError, ModelCallError } from "./modelError.js";
 import type { Provider } from "../types.js";
 
 interface ProviderConfig {
@@ -85,7 +85,8 @@ export async function callOpenAICompatible(
   modelId: string,
   apiKey: string,
   systemPrompt: string,
-  userPrompt: string
+  userPrompt: string,
+  failFast = false
 ): Promise<{ text: string; raw: unknown }> {
   let lastFailureMessage = "";
 
@@ -123,6 +124,19 @@ export async function callOpenAICompatible(
     if (!res.ok) {
       const detail = errorDetail(await res.text().catch(() => ""));
       lastFailureMessage = `HTTP ${res.status}: ${detail}`;
+      if (res.status === 401) throw new KeyLimitError(`${cfg.name} rejected the API key (${detail})`, cfg.provider, modelId, "invalid");
+      // Out of credits/balance — needs the user to add funds, not a wait.
+      if (res.status === 402) throw new KeyLimitError(`${cfg.name} billing: out of credits (${detail})`, cfg.provider, modelId, "billing");
+      if (res.status === 429) {
+        const header = Number(res.headers.get("retry-after"));
+        const wait = Number.isFinite(header) && header > 0 ? header * 1000 : null;
+        // "exceeded"/"quota" alone are too generic (they show up on ordinary rate limits too) —
+        // only a literal per-day phrase counts as a real day-long block.
+        const daily = /per.?day|daily|\bTPD\b|\bRPD\b/i.test(detail);
+        if (daily || failFast || (wait ?? 0) > MAX_RETRY_AFTER_MS) {
+          throw new KeyLimitError(`${cfg.name} ${daily ? "daily limit" : "rate limit"} for ${modelId} (${detail})`, cfg.provider, modelId, daily ? "quota" : "rate_limit", wait);
+        }
+      }
       if ((res.status === 429 || res.status >= 500) && !isLastAttempt) {
         await sleep(retryDelay(res, attempt));
         continue;

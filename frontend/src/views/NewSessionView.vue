@@ -42,7 +42,7 @@ async function submit() {
   submitting.value = true;
   error.value = null;
   try {
-    const id = await store.createAndJudge({
+    const id = await store.create({
       title: title.value,
       problemStatement: problemStatement.value,
       judgingCriteria: judgingCriteria.value,

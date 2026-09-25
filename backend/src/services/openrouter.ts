@@ -1,4 +1,6 @@
-import { ModelCallError } from "./modelError.js";
+import { KeyLimitError, ModelCallError } from "./modelError.js";
+import { limiterKey, pauseFor, retryHintMs, waitForSlot } from "./rateLimit.js";
+import type { EvidenceSource } from "../types.js";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
@@ -8,7 +10,14 @@ interface OpenRouterMessage {
 }
 
 interface OpenRouterResponse {
-  choices?: { message?: { content?: string | null; reasoning?: string | null }; finish_reason?: string }[];
+  choices?: {
+    message?: {
+      content?: string | null;
+      reasoning?: string | null;
+      annotations?: { type?: string; url_citation?: { url?: string; title?: string } }[];
+    };
+    finish_reason?: string;
+  }[];
   // OpenRouter sometimes proxies an upstream provider failure as HTTP 200
   // with an `error` field instead of `choices` (e.g. provider capacity exhausted).
   error?: { message?: string; code?: number };
@@ -16,9 +25,16 @@ interface OpenRouterResponse {
 
 // Worst case per model: 3 attempts x 40s + 7s of backoff = 127s. Kept small so a
 // full council run (personas in parallel, then chairman) fits Vercel's 300s limit.
-const MAX_RETRIES = 2;
+const MAX_RETRIES = 3;
+const MIN_INTERVAL_MS = 500;
+const MAX_QUOTA_WAIT_MS = 30_000;
+const DEFAULT_QUOTA_WAIT_MS = 8_000;
 const RETRY_DELAYS_MS = [2000, 5000];
 const REQUEST_TIMEOUT_MS = 40000;
+// The web plugin searches and fetches pages before the model even starts, so it needs longer per try,
+// but only two tries fit in the 120s evidence stage.
+const SEARCH_TIMEOUT_MS = 50000;
+const SEARCH_MAX_RETRIES = 1;
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -28,17 +44,24 @@ export async function callOpenRouter(
   modelId: string,
   apiKey: string,
   systemPrompt: string,
-  userPrompt: string
-): Promise<{ text: string; raw: unknown }> {
+  userPrompt: string,
+  webSearch = false,
+  failFast = false
+): Promise<{ text: string; raw: unknown; sources: EvidenceSource[] }> {
   const messages: OpenRouterMessage[] = [
     { role: "system", content: systemPrompt },
     { role: "user", content: userPrompt },
   ];
 
   let lastFailureMessage = "";
+  const gate = limiterKey("openrouter", apiKey);
+  const maxRetries = webSearch ? SEARCH_MAX_RETRIES : MAX_RETRIES;
+  const timeoutMs = webSearch ? SEARCH_TIMEOUT_MS : REQUEST_TIMEOUT_MS;
 
-  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-    const isLastAttempt = attempt === MAX_RETRIES;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const isLastAttempt = attempt === maxRetries;
+
+    await waitForSlot(gate, MIN_INTERVAL_MS);
 
     let res: Response;
     try {
@@ -58,16 +81,18 @@ export async function callOpenRouter(
           // tokens on a separate `reasoning` field before ever emitting `content`,
           // so a tight cap can truncate the actual answer.
           max_tokens: 4000,
+          // OpenRouter's web plugin grounds the answer in live search results and returns citations as annotations.
+          ...(webSearch ? { plugins: [{ id: "web", max_results: 5 }] } : {}),
         }),
         // Without this, a hung upstream connection can stall a fetch() call for
         // minutes with no error — and we'd retry that multiple times on top.
-        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+        signal: AbortSignal.timeout(timeoutMs),
       });
     } catch (err) {
       const isTimeout = err instanceof Error && err.name === "TimeoutError";
-      lastFailureMessage = isTimeout ? `Timed out after ${REQUEST_TIMEOUT_MS}ms` : `Network error: ${(err as Error).message}`;
+      lastFailureMessage = isTimeout ? `Timed out after ${timeoutMs}ms` : `Network error: ${(err as Error).message}`;
       if (isLastAttempt) throw new ModelCallError(`${isTimeout ? "Timed out" : "Network error"} calling ${modelId}`, "openrouter", modelId, err);
-      await sleep(RETRY_DELAYS_MS[attempt]);
+      await sleep(RETRY_DELAYS_MS[Math.min(attempt, RETRY_DELAYS_MS.length - 1)]);
       continue;
     }
 
@@ -82,19 +107,50 @@ export async function callOpenRouter(
         // Not JSON; keep the raw body.
       }
       lastFailureMessage = `HTTP ${res.status}: ${detail}`;
-      if ((res.status === 429 || res.status >= 500) && !isLastAttempt) {
-        await sleep(RETRY_DELAYS_MS[attempt]);
+      if (res.status === 401) throw new KeyLimitError(`OpenRouter rejected the API key (${detail})`, "openrouter", modelId, "invalid");
+      // 402 means the account is out of credits — needs the user to add funds, not a wait.
+      if (res.status === 402) throw new KeyLimitError(`OpenRouter credits exhausted (${detail})`, "openrouter", modelId, "billing");
+      // 403 "Key limit exceeded" is the spending cap set on this one key in OpenRouter's dashboard. Other
+      // keys are unaffected and waiting won't lift it, so hand over to the next key.
+      if (res.status === 403 && /key limit exceeded/i.test(body)) {
+        throw new KeyLimitError(`OpenRouter key limit reached: raise it on the key in OpenRouter, then re-enable it here (${detail})`, "openrouter", modelId, "billing");
+      }
+      if (res.status === 429) {
+        const wait = retryHintMs(res, body);
+        // "exceeded"/"quota" alone are too generic (they show up on ordinary rate limits too) —
+        // only a literal per-day phrase counts as a real day-long block.
+        const daily = /per.?day/i.test(body);
+        if (daily || (wait ?? 0) > MAX_QUOTA_WAIT_MS || failFast) {
+          throw new KeyLimitError(`OpenRouter ${daily ? "daily limit" : "rate limit"} for ${modelId} (${detail})`, "openrouter", modelId, daily ? "quota" : "rate_limit", wait);
+        }
+        if (!isLastAttempt) {
+          pauseFor(gate, wait ?? DEFAULT_QUOTA_WAIT_MS);
+          continue;
+        }
+      }
+      if (res.status >= 500 && !isLastAttempt) {
+        await sleep(RETRY_DELAYS_MS[Math.min(attempt, RETRY_DELAYS_MS.length - 1)]);
         continue;
       }
       throw new ModelCallError(`OpenRouter request failed (${res.status}) for ${modelId}: ${detail}`, "openrouter", modelId);
     }
 
-    const json = (await res.json()) as OpenRouterResponse;
+    // The timeout also covers reading the body, so a stalled stream lands here rather than in fetch().
+    let json: OpenRouterResponse;
+    try {
+      json = (await res.json()) as OpenRouterResponse;
+    } catch (err) {
+      const isTimeout = err instanceof Error && err.name === "TimeoutError";
+      lastFailureMessage = isTimeout ? `Timed out after ${timeoutMs}ms waiting for the response body` : `Bad response body: ${(err as Error).message}`;
+      if (isLastAttempt) throw new ModelCallError(`${isTimeout ? "Timed out" : "Unreadable response"} from ${modelId}`, "openrouter", modelId, err);
+      await sleep(RETRY_DELAYS_MS[Math.min(attempt, RETRY_DELAYS_MS.length - 1)]);
+      continue;
+    }
 
     if (json.error) {
       lastFailureMessage = `Upstream error (${json.error.code ?? "?"}): ${json.error.message ?? "unknown"}`;
       if (!isLastAttempt) {
-        await sleep(RETRY_DELAYS_MS[attempt]);
+        await sleep(RETRY_DELAYS_MS[Math.min(attempt, RETRY_DELAYS_MS.length - 1)]);
         continue;
       }
       throw new ModelCallError(`${modelId} failed: ${lastFailureMessage}`, "openrouter", modelId, json);
@@ -108,13 +164,21 @@ export async function callOpenRouter(
       const reason = choice?.finish_reason ? ` (finish_reason: ${choice.finish_reason})` : "";
       lastFailureMessage = `Empty response${reason}`;
       if (!isLastAttempt) {
-        await sleep(RETRY_DELAYS_MS[attempt]);
+        await sleep(RETRY_DELAYS_MS[Math.min(attempt, RETRY_DELAYS_MS.length - 1)]);
         continue;
       }
       throw new ModelCallError(`Empty response from ${modelId}${reason}`, "openrouter", modelId, json);
     }
 
-    return { text, raw: json };
+    const sources: EvidenceSource[] = [];
+    for (const a of choice?.message?.annotations ?? []) {
+      const url = a.url_citation?.url;
+      if (a.type === "url_citation" && url && /^https?:\/\//i.test(url) && !sources.some((s) => s.url === url)) {
+        sources.push({ url, title: a.url_citation?.title?.trim() || url });
+      }
+    }
+
+    return { text, raw: json, sources };
   }
 
   // Unreachable in practice: the loop always returns or throws on its last attempt.

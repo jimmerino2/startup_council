@@ -19,6 +19,33 @@ export interface PersonaVerdict {
   review_error: string | null;
 }
 
+export interface EvidenceRequest {
+  id: string;
+  persona_key: string;
+  /** Every persona that asked for this (near-identical requests are merged). */
+  requested_by: string[];
+  description: string;
+  reason: string | null;
+  status: "pending" | "running" | "complete" | "partial" | "not_found" | "failed";
+  kind: "document" | "request_list";
+  note: string | null;
+  /** The derived, role-relevant information the persona receives. */
+  summary: string | null;
+  sources: { url: string; title: string }[];
+  error_message: string | null;
+}
+
+export interface EvidenceDocument {
+  id: string;
+  request_id: string;
+  url: string;
+  title: string | null;
+  content_type: string | null;
+  bytes: number | null;
+  fetch_status: "fetched" | "failed";
+  error_message: string | null;
+}
+
 export interface ChairmanVerdict {
   model_id: string;
   final_verdict_text: string;
@@ -40,6 +67,8 @@ export const useSessionsStore = defineStore("sessions", {
       session: Record<string, unknown>;
       personaVerdicts: PersonaVerdict[];
       chairmanVerdict: ChairmanVerdict | null;
+      evidenceRequests: EvidenceRequest[];
+      evidenceDocuments: EvidenceDocument[];
     } | null,
     loading: false,
     error: null as string | null,
@@ -79,6 +108,16 @@ export const useSessionsStore = defineStore("sessions", {
       await this.fetchOne(id, { silent: true });
     },
 
+    async startVerdicts(id: string) {
+      await api.startVerdicts(id);
+      await this.fetchOne(id, { silent: true });
+    },
+
+    async retryEvidence(id: string, requestId: string) {
+      await api.retryEvidence(id, requestId);
+      await this.fetchOne(id, { silent: true });
+    },
+
     async startReview(id: string) {
       await api.startReview(id);
       await this.fetchOne(id, { silent: true });
@@ -94,7 +133,7 @@ export const useSessionsStore = defineStore("sessions", {
       await this.fetchOne(id, { silent: true });
     },
 
-    async createAndJudge(input: {
+    async create(input: {
       title: string;
       problemStatement: string;
       judgingCriteria: string;
@@ -102,8 +141,6 @@ export const useSessionsStore = defineStore("sessions", {
       sourceFiles: { filename: string; type: string }[];
     }): Promise<string> {
       const created = await api.createSession(input);
-      // Returns immediately (202); the results view polls until judging finishes.
-      await api.judgeSession(created.id);
       return created.id;
     },
   },

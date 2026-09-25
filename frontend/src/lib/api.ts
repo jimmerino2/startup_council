@@ -45,6 +45,8 @@ export const api = {
       session: Record<string, unknown>;
       personaVerdicts: Record<string, unknown>[];
       chairmanVerdict: Record<string, unknown> | null;
+      evidenceRequests: Record<string, unknown>[];
+      evidenceDocuments: Record<string, unknown>[];
     }>(res);
   },
 
@@ -58,6 +60,22 @@ export const api = {
 
   async retryPersona(id: string, personaKey: string) {
     const res = await fetch(`${API_BASE_URL}/api/sessions/${id}/personas/${personaKey}/retry`, {
+      method: "POST",
+      headers: await authHeaders(),
+    });
+    return handle<Record<string, unknown>>(res);
+  },
+
+  async startVerdicts(id: string) {
+    const res = await fetch(`${API_BASE_URL}/api/sessions/${id}/verdicts`, {
+      method: "POST",
+      headers: await authHeaders(),
+    });
+    return handle<Record<string, unknown>>(res);
+  },
+
+  async retryEvidence(id: string, requestId: string) {
+    const res = await fetch(`${API_BASE_URL}/api/sessions/${id}/evidence/${requestId}/retry`, {
       method: "POST",
       headers: await authHeaders(),
     });
@@ -103,21 +121,54 @@ export const api = {
     const res = await fetch(`${API_BASE_URL}/api/settings`, { headers: await authHeaders() });
     return handle<{
       models: Partial<Record<string, { provider: "openrouter" | "gemini" | "mistral" | "groq" | "gonka"; modelId: string }>>;
-      hasOpenRouterKey: boolean;
-      hasGeminiKey: boolean;
-      hasMistralKey: boolean;
-      hasGroqKey: boolean;
-      hasGonkaKey: boolean;
+      keys: {
+        id: string;
+        provider: "openrouter" | "gemini" | "mistral" | "groq" | "gonka";
+        name: string;
+        hint: string | null;
+        status: "active" | "limited" | "disabled";
+        limitedUntil: string | null;
+        lastError: string | null;
+      }[];
+      maxEvidencePerPersona: number;
+      peerReviewEvidence: "all" | "own";
+      extractEvidence: boolean;
     }>(res);
+  },
+
+  async addKey(input: { provider: string; name: string; apiKey: string }) {
+    const res = await fetch(`${API_BASE_URL}/api/settings/keys`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+      body: JSON.stringify(input),
+    });
+    return handle<{ id: string }>(res);
+  },
+
+  async activateAllKeys() {
+    const res = await fetch(`${API_BASE_URL}/api/settings/keys/activate-all`, { method: "POST", headers: await authHeaders() });
+    return handle<{ ok: true }>(res);
+  },
+
+  async updateKey(id: string, input: { name?: string; disabled?: boolean; apiKey?: string }) {
+    const res = await fetch(`${API_BASE_URL}/api/settings/keys/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+      body: JSON.stringify(input),
+    });
+    return handle<{ ok: true }>(res);
+  },
+
+  async deleteKey(id: string) {
+    const res = await fetch(`${API_BASE_URL}/api/settings/keys/${id}`, { method: "DELETE", headers: await authHeaders() });
+    return handle<{ ok: true }>(res);
   },
 
   async saveSettings(input: {
     models?: Record<string, { provider: "openrouter" | "gemini" | "mistral" | "groq" | "gonka"; modelId: string }>;
-    openrouterApiKey?: string;
-    geminiApiKey?: string;
-    mistralApiKey?: string;
-    groqApiKey?: string;
-    gonkaApiKey?: string;
+    maxEvidencePerPersona?: number;
+    peerReviewEvidence?: "all" | "own";
+    extractEvidence?: boolean;
   }) {
     const res = await fetch(`${API_BASE_URL}/api/settings`, {
       method: "PUT",

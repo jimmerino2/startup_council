@@ -1,160 +1,148 @@
-# Graph Report - startup_council  (2026-09-24)
+# Graph Report - startup_council  (2026-09-25)
 
 ## Corpus Check
-- 51 files · ~12,867 words
-- Verdict: corpus is large enough that graph structure adds value.
-- Unclassified: 19 file(s) not represented in the graph (top: (none) 13, .tsbuildinfo 2, .lock 1)
+- Corpus is ~23,520 words - fits in a single context window. You may not need a graph.
 
 ## Summary
-- 387 nodes · 559 edges · 20 communities (17 shown, 3 thin omitted)
-- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 8 edges (avg confidence: 0.85)
+- 487 nodes · 813 edges · 19 communities (16 shown, 3 thin omitted)
+- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 8 edges (avg confidence: 0.82)
 - Token cost: 0 input · 0 output
 
-## Graph Freshness
-- Built from commit: `50afe890`
-- Run `git rev-parse HEAD` and compare to check if the graph is stale.
-- Run `graphify update .` after code changes (no API cost).
-
 ## Community Hubs (Navigation)
-- NewSessionView.vue
-- settings.ts
-- judge.ts
-- backend/package.json
-- modelRouter.ts
-- package.json
-- frontend/package.json
-- SettingsView.vue
-- SessionResultsView.vue
-- compilerOptions
-- compilerOptions
-- backend
-- compilerOptions
-- dependencies
-- Backend (Express + TypeScript)
-- #app mount point
-- vite-env.d.ts
-- frontend/tsconfig.json
-- Vercel Services deployment
+- Personas & Prompts
+- Gemini & Key Rotation
+- Frontend App & API Client
+- Backend Entry & Config
+- Backend Dependencies
+- Session Results View
+- Settings View
+- Root Dependencies
+- Frontend Dependencies
+- Backend TS Config
+- README Concepts
+- Frontend TS App Config
+- Vercel Config
+- Document Fetching
+- Node TS Config
+- HTML Entry Point
+- Vite Env Types
+- Frontend TS Config
 
 ## God Nodes (most connected - your core abstractions)
-1. `compilerOptions` - 14 edges
-2. `compilerOptions` - 13 edges
-3. `ModelCallError` - 11 edges
-4. `runChairmanSynthesis()` - 9 edges
-5. `Provider` - 9 edges
-6. `callModel()` - 9 edges
-7. `resolveModelTarget()` - 8 edges
-8. `judgePersona()` - 8 edges
-9. `reviewPersona()` - 8 edges
-10. `callOpenAICompatible()` - 8 edges
+1. `ModelCallError` - 14 edges
+2. `Provider` - 14 edges
+3. `compilerOptions` - 14 edges
+4. `compilerOptions` - 13 edges
+5. `callGemini()` - 11 edges
+6. `callModel()` - 11 edges
+7. `callOpenRouter()` - 11 edges
+8. `runChairmanSynthesis()` - 10 edges
+9. `resolveModelTarget()` - 9 edges
+10. `judgePersona()` - 9 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `PersonaConfig` --references--> `Provider`  [EXTRACTED]
   backend/src/config/personas.ts → backend/src/types.ts
-- `judgePersona()` --calls--> `callModel()`  [EXTRACTED]
+- `findEvidence()` --calls--> `callModelWithSearch()`  [EXTRACTED]
   backend/src/services/council.ts → backend/src/services/modelRouter.ts
-- `reviewPersona()` --calls--> `callModel()`  [EXTRACTED]
-  backend/src/services/council.ts → backend/src/services/modelRouter.ts
-- `runChairmanSynthesis()` --calls--> `callModel()`  [EXTRACTED]
-  backend/src/services/council.ts → backend/src/services/modelRouter.ts
-- `PersonaConfig` --references--> `PersonaKey`  [EXTRACTED]
-  backend/src/config/personas.ts → backend/src/types.ts
+- `EvidenceContext` --references--> `SessionInput`  [EXTRACTED]
+  backend/src/services/evidencePipeline.ts → backend/src/types.ts
+- `processRequest()` --calls--> `fetchDocument()`  [EXTRACTED]
+  backend/src/services/evidencePipeline.ts → backend/src/services/fetchDocument.ts
+- `callModel()` --calls--> `callGemini()`  [EXTRACTED]
+  backend/src/services/modelRouter.ts → backend/src/services/gemini.ts
 
 ## Import Cycles
 - None detected.
 
 ## Hyperedges (group relationships)
-- **Council judging flow** — readme_stage1_personas, readme_stage2_chairman, readme_supabase [EXTRACTED 1.00]
+- **Four-step council judging flow** — readme_step1_gather_evidence, readme_step2_initial_verdicts, readme_step3_peer_review, readme_step4_chairman [EXTRACTED 0.95]
 
-## Communities (20 total, 3 thin omitted)
+## Communities (19 total, 3 thin omitted)
 
-### Community 0 - "NewSessionView.vue"
-Cohesion: 0.06
-Nodes (33): auth, router, api, supabase, app, router, useAuthStore, ChairmanVerdict (+25 more)
-
-### Community 1 - "settings.ts"
+### Community 0 - "Personas & Prompts"
 Cohesion: 0.08
-Nodes (31): app, missing, requiredEnvVars, AuthedRequest, requireAuth(), judgeRouter, sessionsRouter, PROVIDERS (+23 more)
+Nodes (59): CHAIRMAN_DEFAULTS, CHAIRMAN_FALLBACK_MODELS, CHAIRMAN_SYSTEM_PROMPT, CLERK_DEFAULT_MODELS, CLERK_SYSTEM_PROMPT, defaultModelFor(), EVIDENCE_EXTRACT_SYSTEM_PROMPT, EVIDENCE_REQUEST_SYSTEM_PROMPT() (+51 more)
 
-### Community 2 - "judge.ts"
-Cohesion: 0.11
-Nodes (38): apiKeyFor(), CHAIRMAN_DEFAULTS, CHAIRMAN_FALLBACK_MODELS, CHAIRMAN_SYSTEM_PROMPT, defaultModelFor(), PersonaConfig, PERSONAS, ProviderDefault (+30 more)
+### Community 1 - "Gemini & Key Rotation"
+Cohesion: 0.08
+Nodes (48): callGemini(), GeminiResponse, RETRY_DELAYS_MS, sleep(), cursor, describeKey(), isUsable(), KeyedTarget (+40 more)
 
-### Community 3 - "backend/package.json"
+### Community 2 - "Frontend App & API Client"
 Cohesion: 0.06
-Nodes (33): devDependencies, esbuild, tsx, @types/cors, @types/express, @types/multer, @types/node, @types/pdf-parse (+25 more)
+Nodes (34): auth, router, api, supabase, app, router, useAuthStore, ChairmanVerdict (+26 more)
 
-### Community 4 - "modelRouter.ts"
-Cohesion: 0.12
-Nodes (27): callGemini(), GeminiResponse, RETRY_DELAYS_MS, sleep(), ModelCallError, backend_src_services_modelerror_provider, callModel(), ModelTarget (+19 more)
+### Community 3 - "Backend Entry & Config"
+Cohesion: 0.07
+Nodes (36): CLERK_PROVIDERS, DEFAULT_MAX_EVIDENCE, MAX_EVIDENCE_LIMIT, PERSONAS, app, missing, requiredEnvVars, AuthedRequest (+28 more)
 
-### Community 5 - "package.json"
+### Community 4 - "Backend Dependencies"
+Cohesion: 0.05
+Nodes (42): dependencies, cors, dotenv, express, mammoth, multer, pdf-parse, @supabase/supabase-js (+34 more)
+
+### Community 5 - "Session Results View"
+Cohesion: 0.06
+Nodes (37): actionError, allPersonasComplete, allReviewsComplete, anyReviewFailed, anyReviewRunning, averageRanking, busy, chairmanError (+29 more)
+
+### Community 6 - "Settings View"
+Cohesion: 0.07
+Nodes (28): addKey(), ALL_ROLES, CLERK, CLERK_PROVIDERS, error, extractEvidence, keyAction(), keyBusy (+20 more)
+
+### Community 7 - "Root Dependencies"
 Cohesion: 0.07
 Nodes (26): dependencies, cors, dotenv, express, mammoth, multer, pdf-parse, @supabase/supabase-js (+18 more)
 
-### Community 6 - "frontend/package.json"
+### Community 8 - "Frontend Dependencies"
 Cohesion: 0.08
 Nodes (24): dependencies, pinia, @supabase/supabase-js, vue, vue-router, devDependencies, typescript, vite (+16 more)
 
-### Community 7 - "SettingsView.vue"
-Cohesion: 0.10
-Nodes (18): error, geminiApiKey, gonkaApiKey, groqApiKey, hasGeminiKey, hasGonkaKey, hasGroqKey, hasMistralKey (+10 more)
-
-### Community 8 - "SessionResultsView.vue"
-Cohesion: 0.07
-Nodes (25): allPersonasComplete, allReviewsComplete, anyReviewFailed, anyReviewRunning, averageRanking, chairmanError, chairmanStatus, personaLabels (+17 more)
-
-### Community 9 - "compilerOptions"
+### Community 9 - "Backend TS Config"
 Cohesion: 0.12
 Nodes (15): compilerOptions, declaration, esModuleInterop, forceConsistentCasingInFileNames, lib, module, moduleResolution, outDir (+7 more)
 
-### Community 10 - "compilerOptions"
+### Community 10 - "README Concepts"
+Cohesion: 0.14
+Nodes (16): Cost per judged idea, Six council personas, Evidence clerk model, Evidence request statuses, Document fetch with SSRF protection, Model providers, Multiple API keys and rotation, Project structure (+8 more)
+
+### Community 11 - "Frontend TS App Config"
 Cohesion: 0.13
 Nodes (14): compilerOptions, allowImportingTsExtensions, isolatedModules, jsx, lib, module, moduleResolution, noEmit (+6 more)
 
-### Community 11 - "backend"
+### Community 12 - "Vercel Config"
 Cohesion: 0.14
 Nodes (13): includeFiles, maxDuration, entrypoint, functions, root, framework, rewrites, root (+5 more)
 
-### Community 12 - "compilerOptions"
+### Community 13 - "Document Fetching"
+Cohesion: 0.26
+Nodes (12): assertPublicHost(), decodeEntities(), fetchDocument(), FetchedDocument, htmlToText(), isPrivateIPv4(), isPrivateIPv6(), MAX_RAW_CHARS (+4 more)
+
+### Community 14 - "Node TS Config"
 Cohesion: 0.20
 Nodes (9): compilerOptions, allowSyntheticDefaultImports, module, moduleResolution, noEmit, skipLibCheck, strict, target (+1 more)
 
-### Community 13 - "dependencies"
-Cohesion: 0.22
-Nodes (9): dependencies, cors, dotenv, express, mammoth, multer, pdf-parse, @supabase/supabase-js (+1 more)
-
-### Community 14 - "Backend (Express + TypeScript)"
-Cohesion: 0.33
-Nodes (7): Backend (Express + TypeScript), Shared .env configuration, Frontend (Vue 3 + Vite + Pinia), OpenRouter free models, Startup Council, Supabase (Postgres, RLS, magic-link auth), 2-stage council design
-
-### Community 15 - "#app mount point"
+### Community 15 - "HTML Entry Point"
 Cohesion: 1.00
 Nodes (3): #app mount point, Startup Council index.html, src/main.ts entry module
 
-### Community 18 - "Vercel Services deployment"
-Cohesion: 0.67
-Nodes (3): Asynchronous judging (202 + waitUntil + polling), Supabase setup after deploying, Vercel Services deployment
-
 ## Knowledge Gaps
-- **216 isolated node(s):** `ProviderDefault`, `CHAIRMAN_DEFAULTS`, `CHAIRMAN_FALLBACK_MODELS`, `SessionRow`, `RESET_REVIEW` (+211 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 240 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **240 isolated node(s):** `name`, `version`, `private`, `dev`, `build` (+235 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 269 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **3 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `pinia` connect `NewSessionView.vue` to `frontend/package.json`?**
-  _High betweenness centrality (0.052) - this node is a cross-community bridge._
-- **Why does `vue` connect `NewSessionView.vue` to `SessionResultsView.vue`, `frontend/package.json`, `SettingsView.vue`?**
-  _High betweenness centrality (0.036) - this node is a cross-community bridge._
-- **What connects `ProviderDefault`, `CHAIRMAN_DEFAULTS`, `CHAIRMAN_FALLBACK_MODELS` to the rest of the system?**
-  _216 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `NewSessionView.vue` be split into smaller, more focused modules?**
-  _Cohesion score 0.061224489795918366 - nodes in this community are weakly interconnected._
-- **Should `settings.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.07897793263646923 - nodes in this community are weakly interconnected._
-- **Should `judge.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.10520487264673312 - nodes in this community are weakly interconnected._
-- **Should `backend/package.json` be split into smaller, more focused modules?**
-  _Cohesion score 0.058823529411764705 - nodes in this community are weakly interconnected._
+- **Why does `pinia` connect `Frontend App & API Client` to `Frontend Dependencies`?**
+  _High betweenness centrality (0.051) - this node is a cross-community bridge._
+- **Why does `vue` connect `Frontend App & API Client` to `Frontend Dependencies`, `Session Results View`, `Settings View`?**
+  _High betweenness centrality (0.034) - this node is a cross-community bridge._
+- **Why does `Provider` connect `Gemini & Key Rotation` to `Personas & Prompts`, `Backend Entry & Config`?**
+  _High betweenness centrality (0.019) - this node is a cross-community bridge._
+- **What connects `name`, `version`, `private` to the rest of the system?**
+  _240 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `Personas & Prompts` be split into smaller, more focused modules?**
+  _Cohesion score 0.07596153846153846 - nodes in this community are weakly interconnected._
+- **Should `Gemini & Key Rotation` be split into smaller, more focused modules?**
+  _Cohesion score 0.08415300546448087 - nodes in this community are weakly interconnected._
+- **Should `Frontend App & API Client` be split into smaller, more focused modules?**
+  _Cohesion score 0.05877551020408163 - nodes in this community are weakly interconnected._

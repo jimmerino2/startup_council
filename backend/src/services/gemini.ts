@@ -1,12 +1,23 @@
-import { ModelCallError } from "./modelError.js";
+import { KeyLimitError, ModelCallError } from "./modelError.js";
+import { limiterKey, pauseFor, retryHintMs, waitForSlot } from "./rateLimit.js";
+import type { EvidenceSource } from "../types.js";
 
 interface GeminiResponse {
-  candidates?: { content?: { parts?: { text?: string }[] }; finishReason?: string }[];
+  candidates?: {
+    content?: { parts?: { text?: string }[] };
+    finishReason?: string;
+    groundingMetadata?: { groundingChunks?: { web?: { uri?: string; title?: string } }[] };
+  }[];
   error?: { message?: string; code?: number };
 }
 
 // Mirrors openrouter.ts's retry/timeout budget so a council run fits Vercel's 300s limit.
-const MAX_RETRIES = 2;
+// Extra attempts are cheap when they are 429s (we wait for the quota window), so allow one more.
+const MAX_RETRIES = 3;
+// Spacing between call starts on one key, and the longest quota wait worth honouring inside a step.
+const MIN_INTERVAL_MS = 1500;
+const MAX_QUOTA_WAIT_MS = 30_000;
+const DEFAULT_QUOTA_WAIT_MS = 10_000;
 const RETRY_DELAYS_MS = [2000, 5000];
 const REQUEST_TIMEOUT_MS = 40000;
 
@@ -18,14 +29,19 @@ export async function callGemini(
   modelId: string,
   apiKey: string,
   systemPrompt: string,
-  userPrompt: string
-): Promise<{ text: string; raw: unknown }> {
+  userPrompt: string,
+  webSearch = false,
+  failFast = false
+): Promise<{ text: string; raw: unknown; sources: EvidenceSource[] }> {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelId)}:generateContent?key=${apiKey}`;
 
   let lastFailureMessage = "";
+  const gate = limiterKey("gemini", apiKey);
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     const isLastAttempt = attempt === MAX_RETRIES;
+
+    await waitForSlot(gate, MIN_INTERVAL_MS);
 
     let res: Response;
     try {
@@ -35,6 +51,8 @@ export async function callGemini(
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: systemPrompt }] },
           contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+          // Google Search grounding: citations come back in groundingMetadata.
+          ...(webSearch ? { tools: [{ google_search: {} }] } : {}),
           generationConfig: {
             temperature: 0.4,
             maxOutputTokens: 1500,
@@ -55,7 +73,7 @@ export async function callGemini(
       const isTimeout = err instanceof Error && err.name === "TimeoutError";
       lastFailureMessage = isTimeout ? `Timed out after ${REQUEST_TIMEOUT_MS}ms` : `Network error: ${(err as Error).message}`;
       if (isLastAttempt) throw new ModelCallError(`${isTimeout ? "Timed out" : "Network error"} calling ${modelId}`, "gemini", modelId, err);
-      await sleep(RETRY_DELAYS_MS[attempt]);
+      await sleep(RETRY_DELAYS_MS[Math.min(attempt, RETRY_DELAYS_MS.length - 1)]);
       continue;
     }
 
@@ -68,8 +86,31 @@ export async function callGemini(
         // Not JSON; keep the raw body.
       }
       lastFailureMessage = `HTTP ${res.status}: ${detail}`;
-      if ((res.status === 429 || res.status >= 500) && !isLastAttempt) {
-        await sleep(RETRY_DELAYS_MS[attempt]);
+      if (res.status === 401 || (res.status === 400 && /API key not valid|API_KEY_INVALID/i.test(body))) {
+        throw new KeyLimitError(`Gemini rejected the API key (${detail})`, "gemini", modelId, "invalid");
+      }
+      // Prepaid credits depleted on this project — needs the user to add funds, not a wait.
+      if (res.status === 402) {
+        throw new KeyLimitError(`Gemini billing: prepaid credits depleted (${detail})`, "gemini", modelId, "billing");
+      }
+      if (res.status === 429) {
+        const wait = retryHintMs(res, body);
+        // "exceeded your current quota" / RESOURCE_EXHAUSTED are Google's generic 429 wording and status —
+        // they appear on ordinary per-minute rate limits too, so only a literal per-day phrase counts here.
+        const daily = /per.?day/i.test(body);
+        // A daily cap, a wait longer than a step can afford, or another key being available: hand over
+        // to the next key (or fail with the reason) instead of waiting here.
+        if (daily || (wait ?? 0) > MAX_QUOTA_WAIT_MS || failFast) {
+          throw new KeyLimitError(`Gemini ${daily ? "quota exhausted" : "rate limit"} for ${modelId} (${detail})`, "gemini", modelId, daily ? "quota" : "rate_limit", wait);
+        }
+        if (!isLastAttempt) {
+          // Pause every call on this key, not just this one, then retry in turn.
+          pauseFor(gate, wait ?? DEFAULT_QUOTA_WAIT_MS);
+          continue;
+        }
+      }
+      if (res.status >= 500 && !isLastAttempt) {
+        await sleep(RETRY_DELAYS_MS[Math.min(attempt, RETRY_DELAYS_MS.length - 1)]);
         continue;
       }
       throw new ModelCallError(`Gemini request failed (${res.status}) for ${modelId}: ${detail}`, "gemini", modelId);
@@ -80,7 +121,7 @@ export async function callGemini(
     if (json.error) {
       lastFailureMessage = `Upstream error (${json.error.code ?? "?"}): ${json.error.message ?? "unknown"}`;
       if (!isLastAttempt) {
-        await sleep(RETRY_DELAYS_MS[attempt]);
+        await sleep(RETRY_DELAYS_MS[Math.min(attempt, RETRY_DELAYS_MS.length - 1)]);
         continue;
       }
       throw new ModelCallError(`${modelId} failed: ${lastFailureMessage}`, "gemini", modelId, json);
@@ -92,13 +133,21 @@ export async function callGemini(
       const reason = candidate?.finishReason ? ` (finishReason: ${candidate.finishReason})` : "";
       lastFailureMessage = `Empty response${reason}`;
       if (!isLastAttempt) {
-        await sleep(RETRY_DELAYS_MS[attempt]);
+        await sleep(RETRY_DELAYS_MS[Math.min(attempt, RETRY_DELAYS_MS.length - 1)]);
         continue;
       }
       throw new ModelCallError(`Empty response from ${modelId}${reason}`, "gemini", modelId, json);
     }
 
-    return { text, raw: json };
+    const sources: EvidenceSource[] = [];
+    for (const chunk of candidate?.groundingMetadata?.groundingChunks ?? []) {
+      const url = chunk.web?.uri;
+      if (url && /^https?:\/\//i.test(url) && !sources.some((s) => s.url === url)) {
+        sources.push({ url, title: chunk.web?.title?.trim() || url });
+      }
+    }
+
+    return { text, raw: json, sources };
   }
 
   throw new ModelCallError(`Gemini request failed for ${modelId}: ${lastFailureMessage}`, "gemini", modelId);

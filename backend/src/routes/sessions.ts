@@ -46,10 +46,13 @@ sessionsRouter.get("/:id", async (req, res) => {
   const { supabase } = req as unknown as AuthedRequest;
   const { id } = req.params;
 
-  const [sessionRes, personaRes, chairmanRes] = await Promise.all([
+  const [sessionRes, personaRes, chairmanRes, evidenceRes, docsRes] = await Promise.all([
     supabase.from("sessions").select("*").eq("id", id).single(),
     supabase.from("persona_verdicts").select("*").eq("session_id", id).order("created_at", { ascending: true }),
     supabase.from("chairman_verdicts").select("*").eq("session_id", id).maybeSingle(),
+    supabase.from("evidence_requests").select("*").eq("session_id", id).order("created_at", { ascending: true }),
+    // Raw text stays server-side (it can be large); the page only needs to know what was fetched.
+    supabase.from("evidence_documents").select("id, request_id, url, title, content_type, bytes, fetch_status, error_message").eq("session_id", id).order("created_at", { ascending: true }),
   ]);
 
   if (sessionRes.error) return res.status(404).json({ error: "Session not found" });
@@ -58,5 +61,7 @@ sessionsRouter.get("/:id", async (req, res) => {
     session: sessionRes.data,
     personaVerdicts: personaRes.data ?? [],
     chairmanVerdict: chairmanRes.data ?? null,
+    evidenceRequests: evidenceRes.data ?? [],
+    evidenceDocuments: docsRes.data ?? [],
   });
 });

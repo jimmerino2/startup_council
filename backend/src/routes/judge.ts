@@ -5,12 +5,14 @@ import { requireAuth, type AuthedRequest } from "../middleware/requireAuth.js";
 import { PERSONAS, resolveModelTarget } from "../config/personas.js";
 import { judgePersona, reviewPersona, runChairmanSynthesis } from "../services/council.js";
 import { loadUserModelSettings } from "../services/loadUserModelSettings.js";
+import { loadEvidence, retryEvidenceRequest, runEvidenceStage } from "../services/evidencePipeline.js";
 import type { PersonaKey, PersonaReview, PersonaVerdict, SessionInput, UserModelSettings } from "../types.js";
 
 export const judgeRouter = Router();
 
 // No new chairman attempt starts after this, leaving headroom under Vercel's 300s function limit.
 const CHAIRMAN_DEADLINE_MS = 170_000;
+
 
 interface SessionRow {
   id: string;
@@ -21,6 +23,7 @@ interface SessionRow {
   pitch_text: string;
   status: string;
   chairman_status: string;
+  evidence_status: string;
 }
 
 function toSessionInput(session: SessionRow): SessionInput {
@@ -65,7 +68,8 @@ async function runPersonaAndPersist(
   await supabase.from("persona_verdicts").update({ status: "running", model_id: modelId, error_message: null, ...RESET_REVIEW }).eq("session_id", session.id).eq("persona_key", personaKey);
 
   try {
-    const verdict = await judgePersona(persona, toSessionInput(session), settings);
+    const evidence = await loadEvidence(supabase, session.id, personaKey);
+    const verdict = await judgePersona(persona, toSessionInput(session), settings, evidence);
     await supabase
       .from("persona_verdicts")
       .update({
@@ -107,7 +111,7 @@ async function runChairmanAndPersist(supabase: SupabaseClient, session: SessionR
   }));
 
   try {
-    const chairman = await runChairmanSynthesis(toSessionInput(session), personaVerdicts, reviews, settings, Date.now() + CHAIRMAN_DEADLINE_MS);
+    const chairman = await runChairmanSynthesis(toSessionInput(session), personaVerdicts, reviews, await loadEvidence(supabase, session.id), settings, Date.now() + CHAIRMAN_DEADLINE_MS);
     await supabase.from("chairman_verdicts").upsert(
       {
         session_id: session.id,
@@ -142,7 +146,10 @@ async function runReviewAndPersist(
 
   try {
     const { data: rows } = await supabase.from("persona_verdicts").select(VERDICT_COLUMNS).eq("session_id", session.id).eq("status", "complete");
-    const review = await reviewPersona(persona, toSessionInput(session), (rows ?? []).map(toPersonaVerdict), settings);
+    // Reviewers see everyone's evidence (labelled without persona names, to keep the review anonymous)
+    // unless the user chose the cheaper "own evidence only" mode in Settings.
+    const evidence = await loadEvidence(supabase, session.id, settings?.peerReviewEvidence === "own" ? personaKey : undefined);
+    const review = await reviewPersona(persona, toSessionInput(session), (rows ?? []).map(toPersonaVerdict), settings, evidence);
     await supabase
       .from("persona_verdicts")
       .update({ review_status: "complete", review_critique: review.critique, review_ranking: review.ranking, review_error: null })
@@ -156,9 +163,14 @@ async function runReviewAndPersist(
   }
 }
 
-/** Step 1 only: runs all 6 personas. Peer review and the chairman are started manually. */
-async function judgeAllInBackground(supabase: SupabaseClient, session: SessionRow, settings: UserModelSettings | undefined) {
+/** Step 2: all 6 personas give their initial verdicts, each using the evidence it requested. */
+async function runVerdictsInBackground(supabase: SupabaseClient, session: SessionRow, settings: UserModelSettings | undefined) {
   await Promise.all(PERSONAS.map((p) => runPersonaAndPersist(supabase, session, p.key, settings)));
+}
+
+async function hasVerdictRows(supabase: SupabaseClient, sessionId: string): Promise<boolean> {
+  const { count } = await supabase.from("persona_verdicts").select("id", { count: "exact", head: true }).eq("session_id", sessionId);
+  return (count ?? 0) > 0;
 }
 
 async function fetchSession(supabase: SupabaseClient, id: string) {
@@ -167,15 +179,64 @@ async function fetchSession(supabase: SupabaseClient, id: string) {
   return data as SessionRow;
 }
 
+/** Step 1: personas request evidence and the clerk gathers it. Can be re-run until verdicts (step 2) start. */
 judgeRouter.post("/:id/judge", requireAuth, async (req, res) => {
   const { user, supabase } = req as unknown as AuthedRequest;
   const { id } = req.params;
 
   const session = await fetchSession(supabase, id);
   if (!session) return res.status(404).json({ error: "Session not found" });
-  if (session.status === "judging" || session.status === "complete") {
-    return res.status(409).json({ error: `Session is already ${session.status}` });
+  if (session.status === "complete") return res.status(409).json({ error: "Session is already complete" });
+  if (session.evidence_status === "running") return res.status(409).json({ error: "Evidence gathering is already running" });
+  if (await hasVerdictRows(supabase, id)) return res.status(409).json({ error: "Verdicts have already started, so evidence is locked" });
+
+  await supabase
+    .from("sessions")
+    .update({ status: "judging", chairman_status: "pending", chairman_error: null, evidence_status: "running", evidence_error: null })
+    .eq("id", id);
+
+  const settings = await loadUserModelSettings(supabase, user.id);
+
+  // Respond right away; work keeps running after the response (waitUntil keeps
+  // the serverless function alive on Vercel, and is a no-op locally).
+  waitUntil(runEvidenceStage(supabase, { sessionId: id, userId: user.id, input: toSessionInput(session) }, settings));
+  res.status(202).json({ id, status: "gathering" });
+});
+
+/** Retry one evidence request (or a persona's failed request list). Only before verdicts start. */
+judgeRouter.post("/:id/evidence/:requestId/retry", requireAuth, async (req, res) => {
+  const { user, supabase } = req as unknown as AuthedRequest;
+  const { id, requestId } = req.params;
+
+  const session = await fetchSession(supabase, id);
+  if (!session) return res.status(404).json({ error: "Session not found" });
+  if (await hasVerdictRows(supabase, id)) return res.status(409).json({ error: "Verdicts have already started, so evidence is locked" });
+
+  const { data: row } = await supabase.from("evidence_requests").select("status").eq("id", requestId).eq("session_id", id).maybeSingle();
+  if (!row) return res.status(404).json({ error: "Evidence request not found" });
+  if (row.status === "complete" || row.status === "running") {
+    return res.status(409).json({ error: `A ${row.status} request can't be retried` });
   }
+
+  await supabase.from("evidence_requests").update({ status: "running", error_message: null }).eq("id", requestId);
+  const settings = await loadUserModelSettings(supabase, user.id);
+  waitUntil(retryEvidenceRequest(supabase, { sessionId: id, userId: user.id, input: toSessionInput(session) }, requestId, settings));
+  res.status(202).json({ id, requestId, status: "running" });
+});
+
+/** Step 2: the six personas give their initial verdicts, using the evidence from step 1. */
+judgeRouter.post("/:id/verdicts", requireAuth, async (req, res) => {
+  const { user, supabase } = req as unknown as AuthedRequest;
+  const { id } = req.params;
+
+  const session = await fetchSession(supabase, id);
+  if (!session) return res.status(404).json({ error: "Session not found" });
+  if (session.evidence_status !== "complete" && session.evidence_status !== "skipped") {
+    return res.status(409).json({ error: "Evidence gathering (step 1) hasn't finished successfully yet" });
+  }
+  const { data: open } = await supabase.from("evidence_requests").select("id").eq("session_id", id).in("status", ["pending", "running"]).limit(1);
+  if ((open ?? []).length > 0) return res.status(409).json({ error: "Some evidence requests are still running" });
+  if (await hasVerdictRows(supabase, id)) return res.status(409).json({ error: "Verdicts have already started" });
 
   await supabase.from("sessions").update({ status: "judging", chairman_status: "pending", chairman_error: null }).eq("id", id);
 
@@ -200,10 +261,7 @@ judgeRouter.post("/:id/judge", requireAuth, async (req, res) => {
   );
 
   const settings = await loadUserModelSettings(supabase, user.id);
-
-  // Respond right away; work keeps running after the response (waitUntil keeps
-  // the serverless function alive on Vercel, and is a no-op locally).
-  waitUntil(judgeAllInBackground(supabase, session, settings));
+  waitUntil(runVerdictsInBackground(supabase, session, settings));
   res.status(202).json({ id, status: "judging" });
 });
 
