@@ -15,6 +15,8 @@ export interface EvidenceContext {
   sessionId: string;
   userId: string;
   input: SessionInput;
+  /** Personas taking part in this session; all of them when omitted. */
+  personaKeys?: PersonaKey[];
 }
 
 interface RequestRow {
@@ -251,7 +253,7 @@ export async function runEvidenceStage(supabase: SupabaseClient, ctx: EvidenceCo
 
     const work = (async () => {
       // Personas decide in parallel; storing is sequential so merging duplicates is deterministic.
-      const lists = await Promise.all(PERSONAS.map(async (p) => ({ key: p.key, requests: await askPersona(supabase, ctx, p.key, max, settings) })));
+      const lists = await Promise.all(PERSONAS.filter((p) => !ctx.personaKeys || ctx.personaKeys.includes(p.key)).map(async (p) => ({ key: p.key, requests: await askPersona(supabase, ctx, p.key, max, settings) })));
       const newRows: RequestRow[] = [];
       for (const list of lists) newRows.push(...(await storeRequests(supabase, ctx, list.key, list.requests)));
       await Promise.all(newRows.map((row) => processRequest(supabase, ctx, row, settings)));

@@ -254,7 +254,14 @@ export async function runChairmanSynthesis(
   settings: UserModelSettings | undefined,
   deadline: number
 ): Promise<ChairmanVerdict> {
-  const chairmanPrompt = `${buildSubmissionPrompt(input)}${buildEvidenceSection(evidence, { withPersona: true })}
+  const memberNote =
+    personaVerdicts.length < PERSONAS.length
+      ? `
+
+# Council Makeup
+Only these members took part in this session: ${personaVerdicts.map((v) => v.personaKey).join(", ")}. Ignore any mention of absent members in your instructions, and if the Judge is absent, weigh the remaining verdicts by how well they fit the judging criteria.`
+      : "";
+  const chairmanPrompt = `${buildSubmissionPrompt(input)}${buildEvidenceSection(evidence, { withPersona: true })}${memberNote}
 
 # Council Verdicts
 ${personaVerdicts

@@ -24,6 +24,14 @@ interface SessionRow {
   status: string;
   chairman_status: string;
   evidence_status: string;
+  /** Null means the whole council. */
+  persona_keys: PersonaKey[] | null;
+}
+
+/** The personas taking part in this session. */
+function activePersonas(session: SessionRow) {
+  const keys = session.persona_keys;
+  return keys ? PERSONAS.filter((p) => keys.includes(p.key)) : PERSONAS;
 }
 
 function toSessionInput(session: SessionRow): SessionInput {
@@ -163,9 +171,9 @@ async function runReviewAndPersist(
   }
 }
 
-/** Step 2: all 6 personas give their initial verdicts, each using the evidence it requested. */
+/** Step 2: every persona in the session gives their initial verdicts, each using the evidence it requested. */
 async function runVerdictsInBackground(supabase: SupabaseClient, session: SessionRow, settings: UserModelSettings | undefined) {
-  await Promise.all(PERSONAS.map((p) => runPersonaAndPersist(supabase, session, p.key, settings)));
+  await Promise.all(activePersonas(session).map((p) => runPersonaAndPersist(supabase, session, p.key, settings)));
 }
 
 async function hasVerdictRows(supabase: SupabaseClient, sessionId: string): Promise<boolean> {
@@ -199,7 +207,7 @@ judgeRouter.post("/:id/judge", requireAuth, async (req, res) => {
 
   // Respond right away; work keeps running after the response (waitUntil keeps
   // the serverless function alive on Vercel, and is a no-op locally).
-  waitUntil(runEvidenceStage(supabase, { sessionId: id, userId: user.id, input: toSessionInput(session) }, settings));
+  waitUntil(runEvidenceStage(supabase, { sessionId: id, userId: user.id, input: toSessionInput(session), personaKeys: session.persona_keys ?? undefined }, settings));
   res.status(202).json({ id, status: "gathering" });
 });
 
@@ -220,7 +228,7 @@ judgeRouter.post("/:id/evidence/:requestId/retry", requireAuth, async (req, res)
 
   await supabase.from("evidence_requests").update({ status: "running", error_message: null }).eq("id", requestId);
   const settings = await loadUserModelSettings(supabase, user.id);
-  waitUntil(retryEvidenceRequest(supabase, { sessionId: id, userId: user.id, input: toSessionInput(session) }, requestId, settings));
+  waitUntil(retryEvidenceRequest(supabase, { sessionId: id, userId: user.id, input: toSessionInput(session), personaKeys: session.persona_keys ?? undefined }, requestId, settings));
   res.status(202).json({ id, requestId, status: "running" });
 });
 
@@ -241,9 +249,9 @@ judgeRouter.post("/:id/verdicts", requireAuth, async (req, res) => {
   await supabase.from("sessions").update({ status: "judging", chairman_status: "pending", chairman_error: null }).eq("id", id);
 
   // Seed one pending row per persona up front so the retry/status endpoints
-  // always have a row to update, and the UI can show all 6 immediately.
+  // always have a row to update, and the UI can show them all immediately.
   await supabase.from("persona_verdicts").upsert(
-    PERSONAS.map((p) => ({
+    activePersonas(session).map((p) => ({
       session_id: id,
       user_id: user.id,
       persona_key: p.key,
@@ -315,7 +323,7 @@ judgeRouter.post("/:id/chairman/retry", requireAuth, async (req, res) => {
   }
 
   const { data: rows } = await supabase.from("persona_verdicts").select("status, review_status").eq("session_id", id);
-  const ready = (rows ?? []).length === PERSONAS.length && (rows ?? []).every((r) => r.status === "complete" && r.review_status === "complete");
+  const ready = (rows ?? []).length === activePersonas(session).length && (rows ?? []).every((r) => r.status === "complete" && r.review_status === "complete");
   if (!ready) {
     return res.status(409).json({ error: "All council verdicts and peer reviews must be complete before the chairman can run" });
   }
@@ -337,7 +345,7 @@ judgeRouter.post("/:id/review", requireAuth, async (req, res) => {
   }
 
   const { data: rows } = await supabase.from("persona_verdicts").select("persona_key, status, review_status").eq("session_id", id);
-  if ((rows ?? []).length !== PERSONAS.length || !(rows ?? []).every((r) => r.status === "complete")) {
+  if ((rows ?? []).length !== activePersonas(session).length || !(rows ?? []).every((r) => r.status === "complete")) {
     return res.status(409).json({ error: "All council verdicts must be complete before peer review" });
   }
   if ((rows ?? []).some((r) => r.review_status === "running")) {
