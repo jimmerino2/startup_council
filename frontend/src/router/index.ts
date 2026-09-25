@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { useAuthStore } from "../stores/auth";
+import AboutView from "../views/AboutView.vue";
 import AuthView from "../views/AuthView.vue";
 import NewSessionView from "../views/NewSessionView.vue";
 import SessionResultsView from "../views/SessionResultsView.vue";
@@ -10,6 +11,7 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: "/", redirect: "/sessions" },
+    { path: "/about", name: "about", component: AboutView },
     { path: "/auth", name: "auth", component: AuthView },
     { path: "/sessions", name: "sessions", component: SessionsListView, meta: { requiresAuth: true } },
     { path: "/sessions/new", name: "new-session", component: NewSessionView, meta: { requiresAuth: true } },

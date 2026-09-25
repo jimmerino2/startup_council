@@ -15,12 +15,15 @@ async function handleSignOut() {
   <div class="app-shell">
     <header class="top-bar">
       <RouterLink to="/sessions" class="brand">Startup Council</RouterLink>
-      <nav v-if="auth.isSignedIn" class="nav">
+      <nav class="nav">
+        <RouterLink to="/about">About</RouterLink>
+        <template v-if="auth.isSignedIn">
         <RouterLink to="/sessions">Sessions</RouterLink>
         <RouterLink to="/sessions/new">New Judging</RouterLink>
         <RouterLink to="/settings">Settings</RouterLink>
         <span class="user-email">{{ auth.user?.email }}</span>
         <button class="link-btn" @click="handleSignOut">Sign out</button>
+        </template>
       </nav>
     </header>
     <main class="content">
