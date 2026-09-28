@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
+import AppIcon from "./AppIcon.vue";
 
 const props = defineProps<{
   /** Accessible name for the file picker, e.g. "Pitch / submission". */
@@ -60,7 +61,8 @@ function onPick(e: Event) {
     <div class="drop-row">
       <input ref="input" type="file" multiple hidden :accept="accept" :aria-label="`Upload file for ${label}`" @change="onPick" />
       <button type="button" class="pick" :disabled="busy" @click="input?.click()">
-        {{ busy ? "Extracting…" : "Upload file" }}
+        <AppIcon name="upload" :size="13" />
+        {{ busy ? "Extracting…" : "Upload File" }}
       </button>
       <span class="muted hint">or drop a PDF, DOCX, MD or TXT onto the box</span>
       <span class="aside"><slot name="aside" /></span>
@@ -105,15 +107,22 @@ function onPick(e: Event) {
   flex-wrap: wrap;
 }
 .pick {
-  background: transparent;
-  color: var(--accent);
-  border: 1px solid var(--accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--surface-raised);
+  color: var(--fg);
+  border: 1px solid var(--border);
   border-radius: 6px;
-  padding: 0.3rem 0.7rem;
+  padding: 0.3rem 0.65rem;
   font: inherit;
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 550;
   cursor: pointer;
+  transition: background-color 120ms ease;
+}
+.pick:hover:not(:disabled) {
+  background: var(--hover);
 }
 .pick:disabled {
   opacity: 0.6;

@@ -80,17 +80,20 @@ export const useSessionsStore = defineStore("sessions", {
     } | null,
     loading: false,
     error: null as string | null,
+    // The list has its own flags: the sidebar reloads it while a session page is loading.
+    listLoading: false,
+    listError: null as string | null,
   }),
   actions: {
     async fetchList() {
-      this.loading = true;
-      this.error = null;
+      this.listLoading = true;
+      this.listError = null;
       try {
         this.list = await api.listSessions();
       } catch (err) {
-        this.error = (err as Error).message;
+        this.listError = (err as Error).message;
       } finally {
-        this.loading = false;
+        this.listLoading = false;
       }
     },
 
