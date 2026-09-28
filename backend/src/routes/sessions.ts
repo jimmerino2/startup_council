@@ -16,6 +16,14 @@ sessionsRouter.post("/", async (req, res) => {
     return res.status(400).json({ error: "title, judgingCriteria, and pitchText are required" });
   }
 
+  // There are no server-wide provider keys, so a user without any key of their own can't run a single step.
+  // Refuse up front rather than create a session that fails at step 1.
+  const { count: keyCount, error: keyError } = await supabase.from("provider_api_keys").select("id", { count: "exact", head: true }).eq("user_id", user.id);
+  if (keyError) return res.status(500).json({ error: keyError.message });
+  if (!keyCount) {
+    return res.status(403).json({ error: "Add an API key in Settings before starting a judging.", code: "no_api_keys" });
+  }
+
   let parsedCriteria;
   try {
     parsedCriteria = parseCriteria(criteria);

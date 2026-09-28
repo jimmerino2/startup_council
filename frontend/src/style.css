@@ -282,6 +282,16 @@ main:focus {
   background: var(--warn-soft);
 }
 
+.callout.success {
+  border-color: var(--success);
+  background: var(--success-soft);
+}
+
+.callout > .app-icon {
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+}
+
 .callout p {
   margin: 0;
 }

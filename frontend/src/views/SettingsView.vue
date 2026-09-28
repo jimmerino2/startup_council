@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { RouterLink, useRoute, useRouter } from "vue-router";
 import { api } from "../lib/api";
+import { useKeysStore } from "../stores/keys";
 import AppIcon, { type IconName } from "../components/AppIcon.vue";
 import PersonaAvatar from "../components/PersonaAvatar.vue";
 
@@ -119,6 +120,18 @@ const whenFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", tim
 const formatWhen = (iso: string) => whenFormat.format(new Date(iso));
 const KEY_TONE: Record<string, string> = { active: "success", limited: "warn", disabled: "" };
 
+// Shared "does the user have any key" flag: it gates New Judging and the Home setup guide.
+const keyStatus = useKeysStore();
+// Set when the first key goes in during this visit, to point the user straight at their first judging.
+const firstKeyAdded = ref(false);
+watch(
+  () => keys.value.length,
+  (n) => {
+    keyStatus.set(n);
+    if (n === 0) firstKeyAdded.value = false;
+  },
+);
+
 async function reloadKeys() {
   keys.value = (await api.getSettings()).keys;
 }
@@ -142,10 +155,12 @@ async function addKey(provider: Provider) {
     keyError.value = "Give the key a name and paste the key.";
     return;
   }
+  const hadNone = keys.value.length === 0;
   await keyAction(`add:${provider}`, async () => {
     await api.addKey({ provider, name: name.trim(), apiKey: apiKey.trim() });
     newKey[provider] = { name: "", apiKey: "" };
   });
+  if (hadNone && keys.value.length > 0) firstKeyAdded.value = true;
 }
 
 const toggleKey = (k: KeyInfo) => keyAction(k.id, () => api.updateKey(k.id, { disabled: keyState(k) !== "disabled" }));
@@ -250,6 +265,18 @@ async function save() {
               <AppIcon name="retry" :size="13" /> {{ keyBusy === "reactivate" ? "Reactivating…" : "Reactivate All Keys" }}
             </button>
           </header>
+          <div v-if="firstKeyAdded" class="callout success" role="status">
+            <AppIcon name="check" :size="16" />
+            <p>You’re set up. <RouterLink to="/sessions/new">Start your first judging</RouterLink></p>
+          </div>
+          <div v-else-if="!loading && keys.length === 0" class="callout welcome">
+            <AppIcon name="key" :size="16" />
+            <p>
+              <strong>Add your first key to start judging.</strong> OpenRouter is the easiest start: every role uses it by default, including
+              the evidence clerk. Create a key at
+              <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer">openrouter.ai/keys</a>, then paste it below.
+            </p>
+          </div>
           <p class="note">This page doesn’t update itself while judging runs elsewhere. Reopen it for the latest status, or reactivate all keys after fixing a limit or billing issue.</p>
           <div v-if="keyError || error" class="callout danger" role="alert"><p>{{ keyError ?? error }}</p></div>
 

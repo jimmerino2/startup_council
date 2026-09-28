@@ -65,6 +65,21 @@ The app is an Obsidian-style workspace (`App.vue`):
   Pages are keyed by session id, so switching sessions in the sidebar reloads the data.
 - Signed out, the sign-in and About pages render full-bleed without the workspace chrome.
 
+**No API keys yet.** There are no server-wide provider keys, so a user with no saved key can't run anything.
+`stores/keys.ts` tracks whether any key exists. It is checked on sign-in, on Home, and on New Judging, and Settings
+keeps it updated as keys are added or deleted. While there are none:
+
+- Home replaces the "Judge a new idea" card with a two-step setup guide: add a key (links to Settings and to
+  openrouter.ai/keys), then judge your first idea (locked).
+- The sidebar shows an "Add an API key" prompt.
+- New Judging shows a locked panel instead of the form. The draft stays saved.
+- Settings → API Keys shows a welcome note recommending OpenRouter, since every role uses it by default. Adding the
+  first key shows "You're set up. Start your first judging".
+- The backend enforces the same rule: `POST /api/sessions` returns 403 with `code: "no_api_keys"`.
+
+A disabled or rate-limited key still counts as having a key; those states are handled per step with retries. If the
+key check itself fails, nothing is locked, because the backend is the real gate.
+
 Pages:
 
 | Page | Layout |

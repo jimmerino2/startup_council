@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from "vue";
-import { useRouter } from "vue-router";
+import { RouterLink, useRouter } from "vue-router";
 import { api } from "../lib/api";
 import { useSessionsStore } from "../stores/sessions";
 import AppIcon from "../components/AppIcon.vue";
 import FileDropZone from "../components/FileDropZone.vue";
 import PersonaAvatar from "../components/PersonaAvatar.vue";
 import { PERSONAS } from "../lib/personas";
+import { useKeysStore } from "../stores/keys";
 
 type Field = "problemStatement" | "judgingCriteria" | "pitchText";
 type Attached = { filename: string; type: string; text: string };
@@ -29,6 +30,9 @@ const STAGES = ["Idea only", "Prototype / MVP", "Launched, early users", "Growin
 
 const router = useRouter();
 const store = useSessionsStore();
+// Without any API key nothing can run, so the form is replaced by a pointer to Settings (the backend refuses too).
+const keys = useKeysStore();
+keys.fetch();
 
 const title = ref("");
 const text = reactive<Record<Field, string>>({ problemStatement: "", judgingCriteria: "", pitchText: "" });
@@ -388,6 +392,7 @@ async function submit() {
     router.push(`/sessions/${id}`);
   } catch (err) {
     error.value = (err as Error).message;
+    keys.fetch(); // if the refusal was "no API keys" (e.g. deleted in another tab), this swaps in the setup panel
   } finally {
     submitting.value = false;
   }
@@ -406,7 +411,21 @@ async function submit() {
       </p>
     </header>
 
-    <div class="layout">
+    <section v-if="keys.missing" class="gate" aria-labelledby="gate-heading">
+      <span class="gate-icon"><AppIcon name="lock" :size="22" /></span>
+      <h2 id="gate-heading">Add an API key first</h2>
+      <p>
+        The council runs on AI models billed to your own key, and you haven’t added one yet. Add a key in Settings, then come back here.
+        OpenRouter is the easiest start, since every role uses it by default.
+      </p>
+      <p v-if="hasDraft" class="gate-note"><AppIcon name="check" :size="13" /> Your draft is saved and will be here when you return.</p>
+      <div class="gate-actions">
+        <RouterLink to="/settings?section=keys" class="btn btn-lg"><AppIcon name="key" :size="16" /> Add an API Key</RouterLink>
+        <RouterLink to="/about" class="btn btn-ghost btn-lg">How It Works</RouterLink>
+      </div>
+    </section>
+
+    <div v-else class="layout">
       <form id="new-session-form" class="form" novalidate @submit.prevent="submit">
         <!-- 1. Pitch -->
         <section class="block" aria-labelledby="sec-pitch">
@@ -614,6 +633,49 @@ async function submit() {
 </template>
 
 <style scoped>
+.gate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  max-width: 560px;
+  margin: 2rem auto 0;
+  padding: 2.25rem 2rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  text-align: center;
+}
+.gate-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.gate h2 {
+  margin: 0.4rem 0 0;
+  font-size: 1.3rem;
+}
+.gate p {
+  margin: 0;
+  color: var(--fg-soft);
+}
+.gate-note {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+}
+.gate-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+}
 .draft-note {
   display: flex;
   align-items: center;

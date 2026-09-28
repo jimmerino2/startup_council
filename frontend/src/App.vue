@@ -5,10 +5,12 @@ import { computed, onMounted, ref, watch } from "vue";
 import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
 import AppIcon from "./components/AppIcon.vue";
 import { useAuthStore } from "./stores/auth";
+import { useKeysStore } from "./stores/keys";
 import { useSessionsStore } from "./stores/sessions";
 
 const auth = useAuthStore();
 const sessions = useSessionsStore();
+const keys = useKeysStore();
 const route = useRoute();
 const router = useRouter();
 
@@ -59,6 +61,16 @@ const viewTitle = computed(() => {
 onMounted(() => {
   if (auth.isSignedIn) sessions.fetchList();
 });
+
+// Whether the user has any API key decides if they can start a judging, so check it on every sign-in.
+watch(
+  () => auth.isSignedIn,
+  (signedIn) => {
+    if (signedIn) keys.fetch();
+    else keys.$reset();
+  },
+  { immediate: true },
+);
 
 // Refresh the list after sign-in, and when a session appears that the sidebar hasn't seen (just created).
 watch(
@@ -122,10 +134,19 @@ const STATUS_LABEL: Record<string, string> = { complete: "Complete", judging: "I
         <input v-model="filter" type="search" name="session-filter" autocomplete="off" spellcheck="false" placeholder="Filter sessions…" />
       </label>
 
+      <RouterLink v-if="keys.missing" to="/settings" class="setup-nudge">
+        <AppIcon name="key" :size="15" />
+        <span>
+          <strong>Add an API key</strong>
+          <span>Needed before you can start a judging.</span>
+        </span>
+      </RouterLink>
+
       <div class="tree" role="list">
         <p class="tree-label">Sessions <span class="count">{{ sessions.list.length }}</span></p>
         <p v-if="sessions.listLoading && !sessions.list.length" class="tree-empty">Loading…</p>
         <p v-else-if="sessions.listError" class="tree-empty error-text">{{ sessions.listError }}</p>
+        <p v-else-if="!sessions.list.length && keys.missing" class="tree-empty">No sessions yet. Add an API key first, then judge your first idea.</p>
         <p v-else-if="!sessions.list.length" class="tree-empty">No sessions yet. Press <strong>+</strong> to judge your first idea.</p>
         <p v-else-if="!filtered.length" class="tree-empty">No sessions match “{{ filter }}”.</p>
         <RouterLink
@@ -289,6 +310,38 @@ const STATUS_LABEL: Record<string, string> = { complete: "Complete", judging: "I
 .sidebar-search input:focus-visible {
   outline: none;
   box-shadow: none;
+}
+.setup-nudge {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 10px 8px;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in srgb, var(--warn) 40%, var(--border));
+  border-radius: 6px;
+  background: var(--warn-soft);
+  color: var(--warn);
+  font-size: 0.8rem;
+  line-height: 1.35;
+  transition: border-color 120ms ease;
+}
+.setup-nudge:hover {
+  border-color: var(--warn);
+  color: var(--warn);
+  text-decoration: none;
+}
+.setup-nudge .app-icon {
+  margin-top: 1px;
+}
+.setup-nudge > span {
+  display: flex;
+  flex-direction: column;
+}
+.setup-nudge strong {
+  color: var(--fg);
+}
+.setup-nudge span span {
+  color: var(--fg-soft);
 }
 .tree {
   flex: 1;
